@@ -43,6 +43,96 @@
         .p-Baja { background: #dcfce7; color: #166534; }
         #excel-upload { display: none; }
         #pdf-template { display: none; padding: 40px; }
+
+        /* =============================================
+           ADAPTACIÓN RESPONSIVE (MOBILE & TABLET)
+           ============================================= */
+        @media (max-width: 768px) {
+            .layout { padding: 1rem; }
+
+            .app-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 1.25rem;
+            }
+
+            .app-header div:last-child {
+                width: 100%;
+                display: grid !important;
+                grid-template-columns: 60px 1fr;
+                gap: 10px;
+            }
+
+            .stats-grid {
+                grid-template-columns: 1fr;
+                gap: 0.75rem;
+            }
+
+            .stat-card {
+                padding: 1rem;
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+            }
+
+            .stat-card h4 { margin-bottom: 0; }
+            .stat-card p { font-size: 1.5rem; }
+
+            .control-panel {
+                display: flex;
+                flex-direction: column-reverse; /* El panel de carga y botones de reporte bajan */
+                gap: 1.5rem;
+            }
+
+            .task-item {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 1rem;
+            }
+
+            .task-item div:last-child {
+                width: 100%;
+                display: flex;
+                justify-content: stretch;
+                border-top: 1px solid var(--border);
+                padding-top: 0.75rem;
+            }
+
+            .task-item .btn {
+                flex: 1;
+                min-height: 48px; /* Optimizado para touch */
+            }
+
+            /* Prevenir zoom automático en iOS y mejorar accesibilidad táctil */
+            input, select, textarea, .btn {
+                font-size: 16px !important;
+                min-height: 44px;
+            }
+
+            /* Ajustes estéticos para modales en pantallas pequeñas */
+            .swal2-popup {
+                width: 95% !important;
+                padding: 1rem 0.5rem !important;
+            }
+            
+            .swal2-html-container { margin: 1em 0.5rem 0.3em !important; }
+            
+            .swal2-input, .swal2-textarea, .swal2-select {
+                margin: 8px 0 !important;
+                width: 100% !important;
+                box-sizing: border-box !important;
+            }
+        }
+
+        /* Corrección de alineación para inputs dentro de SweetAlert */
+        .swal2-html-container input, 
+        .swal2-html-container select, 
+        .swal2-html-container textarea {
+            box-sizing: border-box !important;
+            width: 100% !important;
+            margin-left: 0 !important;
+            margin-right: 0 !important;
+        }
     </style>
 </head>
 <body>
@@ -131,7 +221,6 @@
                     const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
                     const jsonData = XLSX.utils.sheet_to_json(firstSheet);
                     
-                    // Mapeo específico para tu archivo: Columna "Codigo" y "NombreFantasia"
                     const formattedClients = jsonData.map(row => ({
                         id: (row["Codigo"] || row["CODIGO"] || row["ID"] || "").toString().trim(),
                         name: (row["NombreFantasia"] || row["NOMBREFANTASIA"] || row["Nombre"] || "").toString().trim()
