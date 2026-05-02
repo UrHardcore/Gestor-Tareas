@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PharmaTask Pro | Gestión por Código</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --primary: #2563eb; --primary-dark: #1e40af; --secondary: #64748b;
+            --success: #10b981; --warning: #f59e0b; --danger: #ef4444;
+            --background: #f8fafc; --surface: #ffffff; --text-main: #0f172a;
+            --text-muted: #64748b; --border: #e2e8f0; --radius: 12px;
+            --shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+        }
+        [data-theme="dark"] {
+            --background: #0f172a; --surface: #1e293b; --text-main: #f1f5f9;
+            --text-muted: #94a3b8; --border: #334155;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'Inter', sans-serif; background-color: var(--background); color: var(--text-main); transition: 0.3s; }
+        .layout { max-width: 1200px; margin: 0 auto; padding: 2rem 1rem; }
+        .app-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; }
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.5rem; margin-bottom: 2rem; }
+        .stat-card { background: var(--surface); padding: 1.5rem; border-radius: var(--radius); border: 1px solid var(--border); box-shadow: var(--shadow); }
+        .stat-card h4 { color: var(--text-muted); font-size: 0.875rem; text-transform: uppercase; }
+        .stat-card p { font-size: 1.875rem; font-weight: 700; color: var(--primary); }
+        .control-panel { display: grid; grid-template-columns: 1fr 300px; gap: 2rem; }
+        @media (max-width: 850px) { .control-panel { grid-template-columns: 1fr; } }
+        .card { background: var(--surface); padding: 1.5rem; border-radius: var(--radius); border: 1px solid var(--border); margin-bottom: 1.5rem; }
+        input, select, textarea { width: 100%; padding: 0.75rem; border: 1px solid var(--border); border-radius: 8px; background: var(--background); color: var(--text-main); margin-top: 5px; }
+        .btn { padding: 0.75rem 1.5rem; border-radius: 8px; border: none; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 0.5rem; justify-content: center; width: 100%; }
+        .btn-primary { background: var(--primary); color: white; }
+        .btn-outline { background: transparent; border: 1px solid var(--border); color: var(--text-main); }
+        .task-item { background: var(--surface); padding: 1.25rem; border-radius: var(--radius); border: 1px solid var(--border); margin-bottom: 0.75rem; display: flex; justify-content: space-between; align-items: center; }
+        .priority-pill { padding: 0.25rem 0.75rem; border-radius: 20px; font-size: 0.75rem; font-weight: 700; }
+        .p-Alta { background: #fee2e2; color: #991b1b; }
+        .p-Media { background: #fef3c7; color: #92400e; }
+        .p-Baja { background: #dcfce7; color: #166534; }
+        #excel-upload { display: none; }
+        #pdf-template { display: none; padding: 40px; }
+    </style>
+</head>
+<body>
+
+<div class="layout">
+    <header class="app-header">
+        <div>
+            <h1 style="font-size: 1.5rem; font-weight: 800;">PharmaTask <span style="color: var(--primary);">Pro</span></h1>
+            <p style="color: var(--text-muted); font-size: 0.875rem;">Gestión por Código y Farmacia</p>
+        </div>
+        <div style="display: flex; gap: 10px;">
+            <button class="btn btn-outline" style="width: auto;" onclick="App.toggleTheme()">🌓</button>
+            <button class="btn btn-primary" style="width: auto;" onclick="UI.openModal()">+ Nueva Tarea</button>
+        </div>
+    </header>
+
+    <div class="stats-grid">
+        <div class="stat-card"><h4>Total</h4><p id="stat-total">0</p></div>
+        <div class="stat-card"><h4>En Proceso</h4><p id="stat-process" style="color: var(--warning);">0</p></div>
+        <div class="stat-card"><h4>Finalizadas</h4><p id="stat-done" style="color: var(--success);">0</p></div>
+    </div>
+
+    <main class="control-panel">
+        <section>
+            <div style="display: flex; gap: 1rem; margin-bottom: 1rem;">
+                <input type="text" id="globalSearch" placeholder="Buscar por farmacia o código..." onkeyup="App.filterTasks()">
+            </div>
+            <div id="taskListContent"></div>
+        </section>
+
+        <aside>
+            <div class="card">
+                <h3 style="font-size: 1rem; margin-bottom: 0.5rem;">Cargar Base de Datos</h3>
+                <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 1rem;">Usa el archivo CSV de farmacias.</p>
+                <input type="file" id="excel-upload" accept=".xlsx, .xls, .csv" onchange="App.handleExcel(event)">
+                <button class="btn btn-outline" onclick="document.getElementById('excel-upload').click()">
+                    📁 Seleccionar Archivo
+                </button>
+                <div id="client-status" style="font-size: 0.75rem; font-weight: 600; text-align: center; margin-top: 10px;"></div>
+            </div>
+            <button class="btn btn-primary" onclick="App.exportPDF()">📄 Generar Reporte PDF</button>
+        </aside>
+    </main>
+</div>
+
+<div id="pdf-template">
+    <h2 style="color: #2563eb; border-bottom: 2px solid #2563eb; padding-bottom: 10px;">Reporte de Tareas - PharmaTask</h2>
+    <table style="width: 100%; border-collapse: collapse; margin-top: 20px;">
+        <thead>
+            <tr style="background: #f1f5f9;">
+                <th style="padding: 10px; border: 1px solid #ddd;">Código</th>
+                <th style="padding: 10px; border: 1px solid #ddd;">Farmacia</th>
+                <th style="padding: 10px; border: 1px solid #ddd;">Descripción</th>
+            </tr>
+        </thead>
+        <tbody id="pdf-body"></tbody>
+    </table>
+</div>
+
+<script>
+    const App = {
+        tasks: JSON.parse(localStorage.getItem('pharma_tasks')) || [],
+        clients: JSON.parse(localStorage.getItem('pharma_db_clients')) || [],
+        
+        init() {
+            this.updateStats();
+            this.renderAll();
+            this.updateClientUI();
+        },
+
+        save() {
+            localStorage.setItem('pharma_tasks', JSON.stringify(this.tasks));
+            this.updateStats();
+            this.renderAll();
+        },
+
+        handleExcel(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                try {
+                    const data = new Uint8Array(e.target.result);
+                    const workbook = XLSX.read(data, { type: 'array' });
+                    const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+                    const jsonData = XLSX.utils.sheet_to_json(firstSheet);
+                    
+                    // Mapeo específico para tu archivo: Columna "Codigo" y "NombreFantasia"
+                    const formattedClients = jsonData.map(row => ({
+                        id: (row["Codigo"] || row["CODIGO"] || row["ID"] || "").toString().trim(),
+                        name: (row["NombreFantasia"] || row["NOMBREFANTASIA"] || row["Nombre"] || "").toString().trim()
+                    })).filter(c => c.id !== "" && c.name !== "");
+
+                    if (formattedClients.length > 0) {
+                        this.clients = formattedClients;
+                        localStorage.setItem('pharma_db_clients', JSON.stringify(this.clients));
+                        this.updateClientUI();
+                        Swal.fire('¡Importado!', `${formattedClients.length} farmacias cargadas por Código.`, 'success');
+                    } else {
+                        Swal.fire('Error', 'No se encontró la columna "Codigo" o "NombreFantasia".', 'error');
+                    }
+                } catch (err) {
+                    Swal.fire('Error', 'No se pudo procesar el archivo.', 'error');
+                }
+            };
+            reader.readAsArrayBuffer(file);
+        },
+
+        updateClientUI() {
+            const status = document.getElementById('client-status');
+            status.innerText = this.clients.length > 0 
+                ? `✅ ${this.clients.length} farmacias listas` 
+                : '❌ Sin base de datos';
+            status.style.color = this.clients.length > 0 ? 'var(--success)' : 'var(--danger)';
+        },
+
+        autoComplete(value, source) {
+            if (!value || this.clients.length === 0) return;
+            
+            const found = this.clients.find(c => {
+                if (source === 'id') return c.id.toLowerCase() === value.toLowerCase();
+                return c.name.toLowerCase().includes(value.toLowerCase());
+            });
+
+            if (found) {
+                const idInput = document.getElementById('swal-client');
+                const nameInput = document.getElementById('swal-pharmacy');
+                
+                if (source === 'id') {
+                    nameInput.value = found.name;
+                } else if (source === 'name' && value.length > 3) { 
+                    idInput.value = found.id;
+                }
+            }
+        },
+
+        addTask(data) {
+            this.tasks.unshift({ id: Date.now(), status: 'pendiente', ...data });
+            this.save();
+        },
+
+        deleteTask(id) {
+            this.tasks = this.tasks.filter(t => t.id !== id);
+            this.save();
+        },
+
+        updateStatus(id, newStatus) {
+            const task = this.tasks.find(t => t.id === id);
+            if(task) { task.status = newStatus; this.save(); }
+        },
+
+        updateStats() {
+            document.getElementById('stat-total').innerText = this.tasks.length;
+            document.getElementById('stat-process').innerText = this.tasks.filter(t => t.status === 'proceso').length;
+            document.getElementById('stat-done').innerText = this.tasks.filter(t => t.status === 'completada').length;
+        },
+
+        filterTasks() {
+            const query = document.getElementById('globalSearch').value.toLowerCase();
+            const filtered = this.tasks.filter(t => 
+                t.pharmacy.toLowerCase().includes(query) || t.clientId.includes(query)
+            );
+            UI.drawList(filtered);
+        },
+
+        renderAll() { UI.drawList(this.tasks); },
+
+        toggleTheme() {
+            const body = document.body;
+            body.setAttribute('data-theme', body.getAttribute('data-theme') === 'dark' ? 'light' : 'dark');
+        },
+
+        async exportPDF() {
+            const done = this.tasks.filter(t => t.status === 'completada');
+            if(done.length === 0) return Swal.fire('Aviso', 'No hay tareas finalizadas.', 'info');
+            document.getElementById('pdf-body').innerHTML = done.map(t => `
+                <tr><td style="padding:8px;border:1px solid #ddd">${t.clientId}</td>
+                <td style="padding:8px;border:1px solid #ddd">${t.pharmacy}</td>
+                <td style="padding:8px;border:1px solid #ddd">${t.desc}</td></tr>
+            `).join('');
+            const element = document.getElementById('pdf-template');
+            element.style.display = 'block';
+            await html2pdf().set({ margin: 1, filename: 'Reporte_Tareas.pdf' }).from(element).save();
+            element.style.display = 'none';
+        }
+    };
+
+    const UI = {
+        drawList(tasks) {
+            const container = document.getElementById('taskListContent');
+            if(tasks.length === 0) {
+                container.innerHTML = `<div style="text-align:center; padding: 2rem; color: var(--text-muted);">Sin tareas.</div>`;
+                return;
+            }
+            container.innerHTML = tasks.map(t => `
+                <div class="task-item">
+                    <div>
+                        <div style="display:flex; align-items:center; gap:8px;">
+                            <span class="priority-pill p-${t.priority}">${t.priority}</span>
+                            <strong>${t.pharmacy}</strong>
+                        </div>
+                        <p style="font-size: 0.8rem; color: var(--text-muted);">Código: ${t.clientId} | Estado: ${t.status}</p>
+                        <p style="margin-top:5px;">${t.desc}</p>
+                    </div>
+                    <div style="display:flex; gap: 5px;">
+                        ${t.status !== 'completada' ? `<button class="btn btn-outline" style="width:40px" onclick="App.updateStatus(${t.id}, 'completada')">✅</button>` : ''}
+                        <button class="btn btn-outline" style="width:40px; color:var(--danger)" onclick="App.deleteTask(${t.id})">🗑️</button>
+                    </div>
+                </div>
+            `).join('');
+        },
+
+        async openModal() {
+            const { value: formValues } = await Swal.fire({
+                title: 'Nueva Tarea',
+                html: `
+                    <div style="text-align: left;">
+                        <label style="font-size:0.75rem; font-weight:bold;">CÓDIGO DE FARMACIA</label>
+                        <input id="swal-client" class="swal2-input" placeholder="Ej: 900041" oninput="App.autoComplete(this.value, 'id')">
+                        
+                        <label style="font-size:0.75rem; font-weight:bold;">NOMBRE FANTASÍA</label>
+                        <input id="swal-pharmacy" class="swal2-input" placeholder="Nombre de la farmacia..." oninput="App.autoComplete(this.value, 'name')">
+                        
+                        <label style="font-size:0.75rem; font-weight:bold;">PRIORIDAD</label>
+                        <select id="swal-priority" class="swal2-input">
+                            <option value="Media">Media</option>
+                            <option value="Alta">Alta</option>
+                            <option value="Baja">Baja</option>
+                        </select>
+                        
+                        <label style="font-size:0.75rem; font-weight:bold;">DESCRIPCIÓN DEL PROBLEMA</label>
+                        <textarea id="swal-desc" class="swal2-textarea" placeholder="Detalles técnicos..."></textarea>
+                    </div>
+                `,
+                showCancelButton: true,
+                confirmButtonText: 'Guardar',
+                preConfirm: () => {
+                    const pharmacy = document.getElementById('swal-pharmacy').value;
+                    const desc = document.getElementById('swal-desc').value;
+                    if(!pharmacy || !desc) return Swal.showValidationMessage('Farmacia y Descripción obligatorios');
+                    return {
+                        clientId: document.getElementById('swal-client').value || 'S/N',
+                        pharmacy,
+                        priority: document.getElementById('swal-priority').value,
+                        desc
+                    }
+                }
+            });
+            if (formValues) App.addTask(formValues);
+        }
+    };
+
+    document.addEventListener('DOMContentLoaded', () => App.init());
+</script>
+</body>
+</html>
