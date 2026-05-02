@@ -10,128 +10,52 @@
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
-    
-    <!-- Firebase SDK Modular -->
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-        import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-
-        // Configuración extraída de tu captura de pantalla
-        const firebaseConfig = {
-            apiKey: "AIzaSyCCPwgKILNrFt08pSJMxxH1W9Bc18JWBFE",
-            authDomain: "pharma-task.firebaseapp.com",
-            projectId: "pharma-task",
-            storageBucket: "pharma-task.firebasestorage.app",
-            messagingSenderId: "157821568633",
-            appId: "1:157821568633:web:be0aa1626322119a1af6a8",
-            measurementId: "G-1B6T04F8MH"
-        };
-
-        const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
-        const db = getFirestore(app);
-
-        // Exponer al objeto global para que las funciones de la app puedan acceder
-        window.FB = { auth, db, doc, setDoc, getDoc, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged };
-    </script>
-
-    <style>
-        :root {
-            --primary: #2563eb; --primary-dark: #1e40af; --secondary: #64748b;
-            --success: #10b981; --warning: #f59e0b; --danger: #ef4444;
-            --background: #f8fafc; --surface: #ffffff; --text-main: #0f172a;
-            --text-muted: #64748b; --border: #e2e8f0; --radius: 12px;
-            --shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
-        }
-        [data-theme="dark"] {
-            --background: #0f172a; --surface: #1e293b; --text-main: #f1f5f9;
-            --text-muted: #94a3b8; --border: #334155;
-        }
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-        body { font-family: 'Inter', sans-serif; background-color: var(--background); color: var(--text-main); transition: 0.3s; }
-        
-        /* Layout General */
-        .layout { max-width: 1200px; margin: 0 auto; padding: 2rem 1rem; }
-        .app-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; }
-        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.5rem; margin-bottom: 2rem; }
-        .stat-card { background: var(--surface); padding: 1.5rem; border-radius: var(--radius); border: 1px solid var(--border); box-shadow: var(--shadow); }
-        .stat-card h4 { color: var(--text-muted); font-size: 0.875rem; text-transform: uppercase; }
-        .stat-card p { font-size: 1.875rem; font-weight: 700; color: var(--primary); }
-        
-        .control-panel { display: grid; grid-template-columns: 1fr 300px; gap: 2rem; }
-        .card { background: var(--surface); padding: 1.5rem; border-radius: var(--radius); border: 1px solid var(--border); margin-bottom: 1.5rem; }
-        
-        input, select, textarea { width: 100%; padding: 0.75rem; border: 1px solid var(--border); border-radius: 8px; background: var(--background); color: var(--text-main); margin-top: 5px; }
-        .btn { padding: 0.75rem 1.5rem; border-radius: 8px; border: none; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 0.5rem; justify-content: center; width: 100%; }
-        .btn-primary { background: var(--primary); color: white; }
-        .btn-outline { background: transparent; border: 1px solid var(--border); color: var(--text-main); }
-        
-        .task-item { background: var(--surface); padding: 1.25rem; border-radius: var(--radius); border: 1px solid var(--border); margin-bottom: 0.75rem; display: flex; justify-content: space-between; align-items: center; }
-        .priority-pill { padding: 0.25rem 0.75rem; border-radius: 20px; font-size: 0.75rem; font-weight: 700; }
-        .p-Alta { background: #fee2e2; color: #991b1b; }
-        .p-Media { background: #fef3c7; color: #92400e; }
-        .p-Baja { background: #dcfce7; color: #166534; }
-
-        /* Estilos de Autenticación */
-        #auth-overlay { position: fixed; inset: 0; background: var(--background); z-index: 9999; display: flex; align-items: center; justify-content: center; padding: 20px; }
-        .user-bar { font-size: 0.75rem; color: var(--text-muted); display: flex; align-items: center; gap: 10px; margin-bottom: 5px; }
-        #excel-upload { display: none; }
-        #pdf-template { display: none; padding: 40px; }
-
-        /* =============================================
-           ADAPTACIÓN RESPONSIVE (MOBILE)
-           ============================================= */
-        @media (max-width: 768px) {
-            .layout { padding: 1rem; }
-            .app-header { flex-direction: column; align-items: flex-start; gap: 1.25rem; }
-            .app-header div:last-child { width: 100%; display: grid !important; grid-template-columns: 60px 1fr; gap: 10px; }
-            .stats-grid { grid-template-columns: 1fr; gap: 0.75rem; }
-            .stat-card { display: flex; justify-content: space-between; align-items: center; padding: 1rem; }
-            .stat-card p { font-size: 1.5rem; }
-            .control-panel { display: flex; flex-direction: column-reverse; gap: 1.5rem; }
-            .task-item { flex-direction: column; align-items: flex-start; gap: 1rem; }
-            .task-item div:last-child { width: 100%; border-top: 1px solid var(--border); padding-top: 0.75rem; }
-            input, select, textarea, .btn { font-size: 16px !important; min-height: 44px; }
-        }
-
-        /* Corrección para modales de SweetAlert */
-        .swal2-html-container input, 
-        .swal2-html-container select, 
-        .swal2-html-container textarea {
-            box-sizing: border-box !important;
-            width: 100% !important;
-            margin: 8px 0 !important;
-        }
-    </style>
 </head>
 <body>
 
-<!-- Overlay de Autenticación -->
+<!-- Pantalla de Inicio de Sesión -->
 <div id="auth-overlay">
-    <div class="card" style="width: 100%; max-width: 400px; text-align: center;">
-        <h2 style="margin-bottom: 10px;">PharmaTask Pro</h2>
-        <p style="color: var(--text-muted); margin-bottom: 20px; font-size: 0.875rem;">Acceso Seguro Cloud</p>
+    <div class="auth-card">
+        <div class="auth-header">
+            <h1>PharmaTask <span>Pro</span></h1>
+            <p>Gestión Cloud de Farmacias</p>
+        </div>
+
+        <!-- Botón de Google -->
+        <button class="google-btn" onclick="AuthUI.loginWithGoogle()">
+            <svg width="20" height="20" viewBox="0 0 24 24">
+                <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+                <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+                <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" fill="#FBBC05"/>
+                <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+            </svg>
+            Iniciar sesión con Google
+        </button>
+
+        <div class="divider">
+            <span>o usar correo</span>
+        </div>
+
         <input type="email" id="login-email" placeholder="Correo electrónico">
         <input type="password" id="login-pass" placeholder="Contraseña">
-        <button class="btn btn-primary" style="margin-top: 15px;" onclick="AuthUI.handleLogin()">Entrar / Registrarse</button>
-        <p style="font-size: 0.7rem; margin-top: 15px; color: var(--text-muted);">Si el correo no existe, se creará una cuenta nueva.</p>
+        <button class="btn btn-primary" onclick="AuthUI.handleLogin()">Entrar / Registrarse</button>
     </div>
 </div>
 
+<!-- Aplicación Principal -->
 <div class="layout">
     <header class="app-header">
         <div>
             <div class="user-bar">
                 <span id="user-display">Cargando...</span> | 
-                <a href="#" onclick="AuthUI.logout()" style="color: var(--danger); text-decoration: none;">Salir</a>
+                <a href="#" onclick="AuthUI.logout()">Salir</a>
             </div>
-            <h1 style="font-size: 1.5rem; font-weight: 800;">PharmaTask <span style="color: var(--primary);">Pro</span></h1>
-            <p style="color: var(--text-muted); font-size: 0.875rem;">Gestión Cloud de Farmacias</p>
+            <h1>PharmaTask <span>Pro</span></h1>
+            <p>Panel de Control</p>
         </div>
-        <div style="display: flex; gap: 10px;">
-            <button class="btn btn-outline" style="width: auto;" onclick="App.toggleTheme()">🌓</button>
-            <button class="btn btn-primary" style="width: auto;" onclick="UI.openModal()">+ Nueva Tarea</button>
+        <div class="header-actions">
+            <button class="btn-icon" onclick="App.toggleTheme()">🌓</button>
+            <button class="btn btn-primary" onclick="UI.openModal()">+ Nueva Tarea</button>
         </div>
     </header>
 
@@ -143,233 +67,31 @@
 
     <main class="control-panel">
         <section>
-            <div style="display: flex; gap: 1rem; margin-bottom: 1rem;">
-                <input type="text" id="globalSearch" placeholder="Buscar por farmacia o código..." onkeyup="App.filterTasks()">
-            </div>
+            <input type="text" id="globalSearch" placeholder="Buscar farmacia o código..." onkeyup="App.filterTasks()">
             <div id="taskListContent"></div>
         </section>
 
         <aside>
-            <div class="card">
-                <h3 style="font-size: 1rem; margin-bottom: 0.5rem;">Base de Datos Cloud</h3>
-                <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 1rem;">Sincronizado con Google Firestore.</p>
+            <div class="card sync-card">
+                <h3>Base de Datos Cloud</h3>
                 <input type="file" id="excel-upload" accept=".xlsx, .xls, .csv" onchange="App.handleExcel(event)">
-                <button class="btn btn-outline" onclick="document.getElementById('excel-upload').click()">
-                    📁 Importar Farmacias
-                </button>
-                <div id="client-status" style="font-size: 0.75rem; font-weight: 600; text-align: center; margin-top: 10px;"></div>
+                <button class="btn btn-outline" onclick="document.getElementById('excel-upload').click()">📁 Cargar Excel</button>
+                <div id="client-status"></div>
             </div>
-            <button class="btn btn-primary" onclick="App.exportPDF()">📄 Reporte de Finalizadas</button>
+            <button class="btn btn-primary" onclick="App.exportPDF()">📄 Generar PDF</button>
         </aside>
     </main>
 </div>
 
-<!-- Plantilla Oculta para PDF -->
-<div id="pdf-template">
-    <h2 style="color: #2563eb; border-bottom: 2px solid #2563eb; padding-bottom: 10px;">PharmaTask Pro - Reporte</h2>
+<!-- Plantilla para PDF (Oculta) -->
+<div id="pdf-template" style="display:none; padding: 40px;">
+    <h2 style="color: #2563eb; border-bottom: 2px solid #2563eb; padding-bottom: 10px;">Reporte PharmaTask</h2>
     <table style="width: 100%; border-collapse: collapse; margin-top: 20px;">
-        <thead>
-            <tr style="background: #f1f5f9;">
-                <th style="padding: 10px; border: 1px solid #ddd;">Código</th>
-                <th style="padding: 10px; border: 1px solid #ddd;">Farmacia</th>
-                <th style="padding: 10px; border: 1px solid #ddd;">Descripción</th>
-            </tr>
-        </thead>
+        <thead><tr style="background: #f1f5f9;"><th style="padding:10px; border:1px solid #ddd;">Código</th><th style="padding:10px; border:1px solid #ddd;">Farmacia</th><th style="padding:10px; border:1px solid #ddd;">Descripción</th></tr></thead>
         <tbody id="pdf-body"></tbody>
     </table>
 </div>
 
-<script>
-    const AuthUI = {
-        async handleLogin() {
-            const email = document.getElementById('login-email').value;
-            const pass = document.getElementById('login-pass').value;
-            if(!email || !pass) return Swal.fire('Aviso', 'Completa los datos', 'warning');
-
-            try {
-                // Intenta entrar
-                await FB.signInWithEmailAndPassword(FB.auth, email, pass);
-            } catch (e) {
-                if (e.code === 'auth/user-not-found' || e.code === 'auth/invalid-credential') {
-                    // Intenta registrar si no existe
-                    try {
-                        await FB.createUserWithEmailAndPassword(FB.auth, email, pass);
-                    } catch (regErr) {
-                        Swal.fire('Error', 'No se pudo crear la cuenta: ' + regErr.message, 'error');
-                    }
-                } else {
-                    Swal.fire('Error', e.message, 'error');
-                }
-            }
-        },
-        logout() { FB.signOut(FB.auth); location.reload(); }
-    };
-
-    const App = {
-        tasks: [],
-        clients: [],
-        currentUser: null,
-
-        async init(user) {
-            this.currentUser = user;
-            document.getElementById('auth-overlay').style.display = 'none';
-            document.getElementById('user-display').innerText = user.email;
-            
-            // Cargar de Firestore
-            await this.syncFromCloud();
-            this.renderAll();
-        },
-
-        async syncToCloud() {
-            if(!this.currentUser) return;
-            try {
-                const userRef = FB.doc(FB.db, "users", this.currentUser.uid);
-                await FB.setDoc(userRef, {
-                    tasks: this.tasks,
-                    clients: this.clients,
-                    lastSync: Date.now()
-                });
-                this.updateStats();
-                this.updateClientUI();
-            } catch (err) { console.error("Sync Error:", err); }
-        },
-
-        async syncFromCloud() {
-            const docRef = FB.doc(FB.db, "users", this.currentUser.uid);
-            const snap = await FB.getDoc(docRef);
-            if (snap.exists()) {
-                const data = snap.data();
-                this.tasks = data.tasks || [];
-                this.clients = data.clients || [];
-            }
-            this.updateStats();
-            this.updateClientUI();
-        },
-
-        handleExcel(event) {
-            const file = event.target.files[0];
-            if (!file) return;
-            const reader = new FileReader();
-            reader.onload = (e) => {
-                try {
-                    const data = new Uint8Array(e.target.result);
-                    const wb = XLSX.read(data, { type: 'array' });
-                    const sheet = wb.Sheets[wb.SheetNames[0]];
-                    const json = XLSX.utils.sheet_to_json(sheet);
-                    
-                    this.clients = json.map(row => ({
-                        id: (row["Codigo"] || row["CODIGO"] || "").toString().trim(),
-                        name: (row["NombreFantasia"] || row["NOMBREFANTASIA"] || "").toString().trim()
-                    })).filter(c => c.id !== "" && c.name !== "");
-
-                    this.syncToCloud();
-                    Swal.fire('Éxito', `Sincronizadas ${this.clients.length} farmacias`, 'success');
-                } catch (err) { Swal.fire('Error', 'Archivo no compatible', 'error'); }
-            };
-            reader.readAsArrayBuffer(file);
-        },
-
-        updateClientUI() {
-            const st = document.getElementById('client-status');
-            st.innerText = this.clients.length > 0 ? `✅ ${this.clients.length} farmacias listas` : '❌ Sin base de datos';
-            st.style.color = this.clients.length > 0 ? 'var(--success)' : 'var(--danger)';
-        },
-
-        autoComplete(val, source) {
-            if (!val || this.clients.length === 0) return;
-            const match = this.clients.find(c => source === 'id' ? c.id === val : c.name.toLowerCase().includes(val.toLowerCase()));
-            if (match) {
-                document.getElementById('swal-pharmacy').value = match.name;
-                document.getElementById('swal-client').value = match.id;
-            }
-        },
-
-        addTask(data) { this.tasks.unshift({ id: Date.now(), status: 'pendiente', ...data }); this.syncToCloud(); this.renderAll(); },
-        deleteTask(id) { this.tasks = this.tasks.filter(t => t.id !== id); this.syncToCloud(); this.renderAll(); },
-        updateStatus(id, stat) { const t = this.tasks.find(x => x.id === id); if(t) { t.status = stat; this.syncToCloud(); this.renderAll(); } },
-        
-        updateStats() {
-            document.getElementById('stat-total').innerText = this.tasks.length;
-            document.getElementById('stat-process').innerText = this.tasks.filter(t => t.status === 'proceso').length;
-            document.getElementById('stat-done').innerText = this.tasks.filter(t => t.status === 'completada').length;
-        },
-
-        filterTasks() {
-            const q = document.getElementById('globalSearch').value.toLowerCase();
-            UI.drawList(this.tasks.filter(t => t.pharmacy.toLowerCase().includes(q) || t.clientId.includes(q)));
-        },
-
-        renderAll() { UI.drawList(this.tasks); },
-        
-        toggleTheme() {
-            const b = document.body;
-            b.setAttribute('data-theme', b.getAttribute('data-theme') === 'dark' ? 'light' : 'dark');
-        },
-
-        async exportPDF() {
-            const done = this.tasks.filter(t => t.status === 'completada');
-            if(done.length === 0) return Swal.fire('Aviso', 'No hay tareas finalizadas', 'info');
-            document.getElementById('pdf-body').innerHTML = done.map(t => `<tr><td>${t.clientId}</td><td>${t.pharmacy}</td><td>${t.desc}</td></tr>`).join('');
-            const el = document.getElementById('pdf-template'); el.style.display = 'block';
-            await html2pdf().set({ margin: 1, filename: 'Tareas_PharmaTask.pdf' }).from(el).save();
-            el.style.display = 'none';
-        }
-    };
-
-    const UI = {
-        drawList(tasks) {
-            const c = document.getElementById('taskListContent');
-            c.innerHTML = tasks.length === 0 ? `<div style="text-align:center; padding: 2rem; color:var(--text-muted)">Sin tareas pendientes.</div>` :
-            tasks.map(t => `
-                <div class="task-item">
-                    <div>
-                        <div style="display:flex; align-items:center; gap:8px;">
-                            <span class="priority-pill p-${t.priority}">${t.priority}</span>
-                            <strong>${t.pharmacy}</strong>
-                        </div>
-                        <p style="font-size: 0.8rem; color: var(--text-muted);">Código: ${t.clientId} | Estado: ${t.status}</p>
-                        <p style="margin-top:5px;">${t.desc}</p>
-                    </div>
-                    <div style="display:flex; gap: 5px;">
-                        ${t.status !== 'completada' ? `<button class="btn btn-outline" style="width:40px" onclick="App.updateStatus(${t.id}, 'completada')">✅</button>` : ''}
-                        <button class="btn btn-outline" style="width:40px; color:var(--danger)" onclick="App.deleteTask(${t.id})">🗑️</button>
-                    </div>
-                </div>
-            `).join('');
-        },
-
-        async openModal() {
-            const { value: form } = await Swal.fire({
-                title: 'Nueva Tarea',
-                html: `
-                    <div style="text-align: left;">
-                        <input id="swal-client" class="swal2-input" placeholder="Código" oninput="App.autoComplete(this.value, 'id')">
-                        <input id="swal-pharmacy" class="swal2-input" placeholder="Nombre Farmacia" oninput="App.autoComplete(this.value, 'name')">
-                        <select id="swal-priority" class="swal2-input"><option>Media</option><option>Alta</option><option>Baja</option></select>
-                        <textarea id="swal-desc" class="swal2-textarea" placeholder="Descripción del problema..."></textarea>
-                    </div>`,
-                showCancelButton: true,
-                preConfirm: () => {
-                    const ph = document.getElementById('swal-pharmacy').value;
-                    const ds = document.getElementById('swal-desc').value;
-                    if(!ph || !ds) return Swal.showValidationMessage('Faltan datos obligatorios');
-                    return { clientId: document.getElementById('swal-client').value, pharmacy: ph, priority: document.getElementById('swal-priority').value, desc: ds };
-                }
-            });
-            if (form) App.addTask(form);
-        }
-    };
-
-    // Espera a que Firebase esté listo
-    const checkAuth = setInterval(() => {
-        if(window.FB) {
-            clearInterval(checkAuth);
-            FB.onAuthStateChanged(FB.auth, user => {
-                if (user) App.init(user);
-                else document.getElementById('auth-overlay').style.display = 'flex';
-            });
-        }
-    }, 500);
-</script>
+<!-- Scripts y Estilos se cargan al final -->
 </body>
 </html>
