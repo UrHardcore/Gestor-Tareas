@@ -48,7 +48,7 @@
         .control-panel { display: grid; grid-template-columns: 1fr 300px; gap: 2rem; }
         @media (max-width: 850px) { .control-panel { grid-template-columns: 1fr; } }
         .card { background: var(--surface); padding: 1.5rem; border-radius: var(--radius); border: 1px solid var(--border); margin-bottom: 1.5rem; }
-        input, select, textarea { width: 100%; padding: 0.75rem; border: 1px solid var(--border); border-radius: 8px; background: var(--background); color: var(--text-main); margin-top: 5px; }
+        input, select, textarea { width: 100%; padding: 0.85rem; border: 1px solid var(--border); border-radius: 8px; background: var(--background); color: var(--text-main); margin-top: 5px; font-size: 1rem; }
         .btn { padding: 0.75rem 1.5rem; border-radius: 8px; border: none; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 0.5rem; justify-content: center; width: 100%; }
         .btn-primary { background: var(--primary); color: white; }
         .btn-outline { background: transparent; border: 1px solid var(--border); color: var(--text-main); }
@@ -60,7 +60,13 @@
         #excel-upload { display: none; }
         #pdf-template { display: none; padding: 40px; }
 
+        /* Ajustes para el Modal de SweetAlert */
+        .swal2-popup { width: 600px !important; padding: 2rem !important; border-radius: 16px !important; }
+        .swal2-html-container { margin: 1rem 0 0 !important; overflow: visible !important; }
+        .swal-label { font-size: 0.85rem; font-weight: 700; color: var(--text-muted); display: block; margin-top: 15px; text-transform: uppercase; }
+        
         @media (max-width: 768px) {
+            .swal2-popup { width: 95% !important; }
             .layout { padding: 1rem; }
             .app-header { flex-direction: column; align-items: flex-start; gap: 1.25rem; }
             .app-header div:last-child { width: 100%; display: grid !important; grid-template-columns: 60px 1fr 1fr; gap: 10px; }
@@ -124,7 +130,6 @@
     </main>
 </div>
 
-<!-- Template oculto para PDF -->
 <div id="pdf-template">
     <h2 style="color: #2563eb; border-bottom: 2px solid #2563eb; padding-bottom: 10px;">Reporte de Productividad - PharmaTask</h2>
     <table style="width: 100%; border-collapse: collapse; margin-top: 20px;">
@@ -214,7 +219,7 @@
             this.tasks.unshift({ 
                 id: Date.now(), 
                 status: 'pendiente', 
-                createdAt: data.customTime || new Date().toLocaleString('es-AR'), // Captura hora del modal
+                createdAt: data.customTime || new Date().toLocaleString('es-AR'),
                 completedAt: null,
                 ...data 
             });
@@ -225,7 +230,7 @@
             const t = this.tasks.find(x => x.id === id);
             if(t) {
                 t.status = stat;
-                if(stat === 'completada') t.completedAt = new Date().toLocaleString('es-AR'); // Registro de fin automático
+                if(stat === 'completada') t.completedAt = new Date().toLocaleString('es-AR');
                 this.save();
             }
         },
@@ -282,7 +287,7 @@
                             Cod: ${t.clientId} | <span style="color:var(--primary)">Inicio: ${t.createdAt}</span>
                             ${t.completedAt ? ` | <span style="color:var(--success)">Fin: ${t.completedAt}</span>` : ''} 
                         </p>
-                        <p style="margin-top:5px">${t.desc}</p>
+                        <p style="margin-top:5px; font-weight:500;">${t.desc}</p>
                     </div>
                     <div style="display:flex;gap:5px;">
                         ${t.status !== 'completada' ? `<button class="btn btn-outline" style="width:40px" onclick="App.updateStatus(${t.id}, 'completada')">✅</button>` : ''}
@@ -292,7 +297,6 @@
         },
 
         async openModal() {
-            // Generar fecha actual para el input
             const now = new Date();
             const localISO = new Date(now.getTime() - (now.getTimezoneOffset() * 60000)).toISOString().slice(0, 16);
 
@@ -300,26 +304,29 @@
                 title: 'Nueva Tarea',
                 html: `
                     <div style="text-align:left">
-                        <label style="font-size:0.75rem;font-weight:700">CÓDIGO Y FARMACIA</label>
-                        <div style="display:flex;gap:5px">
-                            <input id="swal-client" class="swal2-input" style="width:30%" placeholder="ID" oninput="App.autoComplete(this.value, 'id')">
-                            <input id="swal-pharmacy" class="swal2-input" style="width:70%" placeholder="Nombre" oninput="App.autoComplete(this.value, 'name')">
+                        <label class="swal-label">Código y Nombre de Farmacia</label>
+                        <div style="display:flex; gap:10px;">
+                            <input id="swal-client" class="swal2-input" style="width:30%; margin:0;" placeholder="ID" oninput="App.autoComplete(this.value, 'id')">
+                            <input id="swal-pharmacy" class="swal2-input" style="width:70%; margin:0;" placeholder="Nombre de la farmacia" oninput="App.autoComplete(this.value, 'name')">
                         </div>
                         
-                        <label style="font-size:0.75rem;font-weight:700;margin-top:10px;display:block">FECHA Y HORA DE INICIO</label>
-                        <input type="datetime-local" id="swal-time" class="swal2-input" value="${localISO}">
+                        <label class="swal-label">Fecha y Hora de Inicio</label>
+                        <input type="datetime-local" id="swal-time" class="swal2-input" style="margin:0;" value="${localISO}">
 
-                        <label style="font-size:0.75rem;font-weight:700;margin-top:10px;display:block">DETALLES</label>
-                        <select id="swal-priority" class="swal2-input"><option>Media</option><option>Alta</option><option>Baja</option></select>
-                        <textarea id="swal-desc" class="swal2-textarea" placeholder="Descripción del problema..."></textarea>
+                        <label class="swal-label">Prioridad</label>
+                        <select id="swal-priority" class="swal2-input" style="margin:0;"><option>Media</option><option>Alta</option><option>Baja</option></select>
+                        
+                        <label class="swal-label">Descripción Detallada</label>
+                        <textarea id="swal-desc" class="swal2-textarea" style="margin:0; height: 120px;" placeholder="Explique el problema o requerimiento..."></textarea>
                     </div>`,
+                focusConfirm: false,
                 preConfirm: () => {
                     const timeVal = document.getElementById('swal-time').value;
                     const dateObj = new Date(timeVal);
                     return {
                         clientId: document.getElementById('swal-client').value || 'S/N',
                         pharmacy: document.getElementById('swal-pharmacy').value || 'S/N',
-                        customTime: dateObj.toLocaleString('es-AR'), // Guardamos la hora elegida[cite: 2]
+                        customTime: dateObj.toLocaleString('es-AR'),
                         priority: document.getElementById('swal-priority').value,
                         desc: document.getElementById('swal-desc').value
                     }
