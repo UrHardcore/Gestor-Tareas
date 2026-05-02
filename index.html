@@ -24,7 +24,6 @@
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body { font-family: 'Inter', sans-serif; background-color: var(--background); color: var(--text-main); transition: 0.3s; }
         
-        /* LOGIN SCREEN */
         #auth-screen {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background-color: #0f172a; display: flex; align-items: center; justify-content: center; z-index: 10000;
@@ -40,7 +39,6 @@
         }
         .auth-input { width: 100%; padding: 0.75rem; margin-bottom: 0.75rem; border: 1px solid #e2e8f0; border-radius: 8px; }
 
-        /* MAIN LAYOUT */
         .layout { max-width: 1200px; margin: 0 auto; padding: 2rem 1rem; display: none; }
         .app-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; }
         .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.5rem; margin-bottom: 2rem; }
@@ -70,9 +68,7 @@
             .control-panel { display: flex; flex-direction: column-reverse; gap: 1.5rem; }
             .task-item { flex-direction: column; align-items: flex-start; gap: 1rem; }
             .task-item div:last-child { width: 100%; display: flex; justify-content: stretch; border-top: 1px solid var(--border); padding-top: 0.75rem; }
-            input, select, textarea, .btn { font-size: 16px !important; min-height: 44px; }
         }
-        .swal2-html-container input, .swal2-html-container select, .swal2-html-container textarea { box-sizing: border-box !important; width: 100% !important; margin: 5px 0 !important; }
     </style>
 </head>
 <body>
@@ -112,7 +108,7 @@
 
     <main class="control-panel">
         <section>
-            <input type="text" id="globalSearch" placeholder="Buscar farmacia..." onkeyup="App.filterTasks()" style="margin-bottom: 1.5rem;">
+            <input type="text" id="globalSearch" placeholder="Buscar farmacia o código..." onkeyup="App.filterTasks()" style="margin-bottom: 1.5rem;">
             <div id="taskListContent"></div>
         </section>
 
@@ -128,6 +124,7 @@
     </main>
 </div>
 
+<!-- Template oculto para PDF -->
 <div id="pdf-template">
     <h2 style="color: #2563eb; border-bottom: 2px solid #2563eb; padding-bottom: 10px;">Reporte de Productividad - PharmaTask</h2>
     <table style="width: 100%; border-collapse: collapse; margin-top: 20px;">
@@ -194,7 +191,7 @@
                 })).filter(c => c.id && c.name);
                 localStorage.setItem('pharma_db_clients', JSON.stringify(this.clients));
                 this.updateClientUI();
-                Swal.fire('Éxito', 'Farmacias cargadas', 'success');
+                Swal.fire('Éxito', 'Farmacias cargadas correctamente', 'success');
             };
             reader.readAsArrayBuffer(file);
         },
@@ -217,7 +214,7 @@
             this.tasks.unshift({ 
                 id: Date.now(), 
                 status: 'pendiente', 
-                createdAt: new Date().toLocaleString('es-AR'), // Inicio automático[cite: 2]
+                createdAt: data.customTime || new Date().toLocaleString('es-AR'), // Captura hora del modal
                 completedAt: null,
                 ...data 
             });
@@ -228,7 +225,7 @@
             const t = this.tasks.find(x => x.id === id);
             if(t) {
                 t.status = stat;
-                if(stat === 'completada') t.completedAt = new Date().toLocaleString('es-AR'); // Fin automático[cite: 2]
+                if(stat === 'completada') t.completedAt = new Date().toLocaleString('es-AR'); // Registro de fin automático
                 this.save();
             }
         },
@@ -250,7 +247,7 @@
 
         async exportPDF() {
             const done = this.tasks.filter(t => t.status === 'completada');
-            if(done.length === 0) return Swal.fire('Aviso', 'No hay tareas completadas.', 'info');
+            if(done.length === 0) return Swal.fire('Aviso', 'No hay tareas completadas para reportar.', 'info');
             
             document.getElementById('pdf-body').innerHTML = done.map(t => `
                 <tr>
@@ -265,8 +262,8 @@
             el.style.display = 'block';
             await html2pdf().set({ 
                 margin: 10, 
-                filename: 'Reporte_Productividad.pdf',
-                jsPDF: { orientation: 'landscape' } // Horizontal para las fechas[cite: 2]
+                filename: `Reporte_${new Date().toLocaleDateString()}.pdf`,
+                jsPDF: { orientation: 'landscape' }
             }).from(el).save();
             el.style.display = 'none';
         }
@@ -275,13 +272,16 @@
     const UI = {
         drawList(tasks) {
             const container = document.getElementById('taskListContent');
-            container.innerHTML = tasks.length === 0 ? `<div style="text-align:center;color:var(--text-muted);">Sin tareas pendientes</div>` :
+            container.innerHTML = tasks.length === 0 ? `<div style="text-align:center;color:var(--text-muted);padding:2rem;">No hay tareas que mostrar</div>` :
             tasks.map(t => `
-                <div class="task-item">
+                <div class="task-item" style="${t.status === 'completada' ? 'opacity:0.7; border-left:4px solid var(--success)' : ''}">
                     <div>
                         <span class="priority-pill p-${t.priority}">${t.priority}</span>
                         <strong>${t.pharmacy}</strong>
-                        <p style="font-size:0.8rem;color:var(--text-muted)">Cod: ${t.clientId} | Creada: ${t.createdAt}</p>
+                        <p style="font-size:0.8rem;color:var(--text-muted)">
+                            Cod: ${t.clientId} | <span style="color:var(--primary)">Inicio: ${t.createdAt}</span>
+                            ${t.completedAt ? ` | <span style="color:var(--success)">Fin: ${t.completedAt}</span>` : ''} 
+                        </p>
                         <p style="margin-top:5px">${t.desc}</p>
                     </div>
                     <div style="display:flex;gap:5px;">
@@ -292,6 +292,10 @@
         },
 
         async openModal() {
+            // Generar fecha actual para el input
+            const now = new Date();
+            const localISO = new Date(now.getTime() - (now.getTimezoneOffset() * 60000)).toISOString().slice(0, 16);
+
             const { value: f } = await Swal.fire({
                 title: 'Nueva Tarea',
                 html: `
@@ -301,16 +305,25 @@
                             <input id="swal-client" class="swal2-input" style="width:30%" placeholder="ID" oninput="App.autoComplete(this.value, 'id')">
                             <input id="swal-pharmacy" class="swal2-input" style="width:70%" placeholder="Nombre" oninput="App.autoComplete(this.value, 'name')">
                         </div>
+                        
+                        <label style="font-size:0.75rem;font-weight:700;margin-top:10px;display:block">FECHA Y HORA DE INICIO</label>
+                        <input type="datetime-local" id="swal-time" class="swal2-input" value="${localISO}">
+
                         <label style="font-size:0.75rem;font-weight:700;margin-top:10px;display:block">DETALLES</label>
                         <select id="swal-priority" class="swal2-input"><option>Media</option><option>Alta</option><option>Baja</option></select>
                         <textarea id="swal-desc" class="swal2-textarea" placeholder="Descripción del problema..."></textarea>
                     </div>`,
-                preConfirm: () => ({
-                    clientId: document.getElementById('swal-client').value || 'S/N',
-                    pharmacy: document.getElementById('swal-pharmacy').value || 'S/N',
-                    priority: document.getElementById('swal-priority').value,
-                    desc: document.getElementById('swal-desc').value
-                })
+                preConfirm: () => {
+                    const timeVal = document.getElementById('swal-time').value;
+                    const dateObj = new Date(timeVal);
+                    return {
+                        clientId: document.getElementById('swal-client').value || 'S/N',
+                        pharmacy: document.getElementById('swal-pharmacy').value || 'S/N',
+                        customTime: dateObj.toLocaleString('es-AR'), // Guardamos la hora elegida[cite: 2]
+                        priority: document.getElementById('swal-priority').value,
+                        desc: document.getElementById('swal-desc').value
+                    }
+                }
             });
             if(f && f.desc) App.addTask(f);
         }
