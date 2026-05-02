@@ -3,12 +3,39 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PharmaTask Pro | Gestión por Código</title>
+    <title>PharmaTask Pro | Cloud Edition</title>
+    
+    <!-- Librerías Externas -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
     
+    <!-- Firebase SDK Modular -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+        import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+        // Configuración extraída de tu captura de pantalla
+        const firebaseConfig = {
+            apiKey: "AIzaSyCCPwgKILNrFt08pSJMxxH1W9Bc18JWBFE",
+            authDomain: "pharma-task.firebaseapp.com",
+            projectId: "pharma-task",
+            storageBucket: "pharma-task.firebasestorage.app",
+            messagingSenderId: "157821568633",
+            appId: "1:157821568633:web:be0aa1626322119a1af6a8",
+            measurementId: "G-1B6T04F8MH"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        // Exponer al objeto global para que las funciones de la app puedan acceder
+        window.FB = { auth, db, doc, setDoc, getDoc, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged };
+    </script>
+
     <style>
         :root {
             --primary: #2563eb; --primary-dark: #1e40af; --secondary: #64748b;
@@ -23,125 +50,84 @@
         }
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body { font-family: 'Inter', sans-serif; background-color: var(--background); color: var(--text-main); transition: 0.3s; }
+        
+        /* Layout General */
         .layout { max-width: 1200px; margin: 0 auto; padding: 2rem 1rem; }
         .app-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; }
         .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.5rem; margin-bottom: 2rem; }
         .stat-card { background: var(--surface); padding: 1.5rem; border-radius: var(--radius); border: 1px solid var(--border); box-shadow: var(--shadow); }
         .stat-card h4 { color: var(--text-muted); font-size: 0.875rem; text-transform: uppercase; }
         .stat-card p { font-size: 1.875rem; font-weight: 700; color: var(--primary); }
+        
         .control-panel { display: grid; grid-template-columns: 1fr 300px; gap: 2rem; }
-        @media (max-width: 850px) { .control-panel { grid-template-columns: 1fr; } }
         .card { background: var(--surface); padding: 1.5rem; border-radius: var(--radius); border: 1px solid var(--border); margin-bottom: 1.5rem; }
+        
         input, select, textarea { width: 100%; padding: 0.75rem; border: 1px solid var(--border); border-radius: 8px; background: var(--background); color: var(--text-main); margin-top: 5px; }
         .btn { padding: 0.75rem 1.5rem; border-radius: 8px; border: none; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 0.5rem; justify-content: center; width: 100%; }
         .btn-primary { background: var(--primary); color: white; }
         .btn-outline { background: transparent; border: 1px solid var(--border); color: var(--text-main); }
+        
         .task-item { background: var(--surface); padding: 1.25rem; border-radius: var(--radius); border: 1px solid var(--border); margin-bottom: 0.75rem; display: flex; justify-content: space-between; align-items: center; }
         .priority-pill { padding: 0.25rem 0.75rem; border-radius: 20px; font-size: 0.75rem; font-weight: 700; }
         .p-Alta { background: #fee2e2; color: #991b1b; }
         .p-Media { background: #fef3c7; color: #92400e; }
         .p-Baja { background: #dcfce7; color: #166534; }
+
+        /* Estilos de Autenticación */
+        #auth-overlay { position: fixed; inset: 0; background: var(--background); z-index: 9999; display: flex; align-items: center; justify-content: center; padding: 20px; }
+        .user-bar { font-size: 0.75rem; color: var(--text-muted); display: flex; align-items: center; gap: 10px; margin-bottom: 5px; }
         #excel-upload { display: none; }
         #pdf-template { display: none; padding: 40px; }
 
         /* =============================================
-           ADAPTACIÓN RESPONSIVE (MOBILE & TABLET)
+           ADAPTACIÓN RESPONSIVE (MOBILE)
            ============================================= */
         @media (max-width: 768px) {
             .layout { padding: 1rem; }
-
-            .app-header {
-                flex-direction: column;
-                align-items: flex-start;
-                gap: 1.25rem;
-            }
-
-            .app-header div:last-child {
-                width: 100%;
-                display: grid !important;
-                grid-template-columns: 60px 1fr;
-                gap: 10px;
-            }
-
-            .stats-grid {
-                grid-template-columns: 1fr;
-                gap: 0.75rem;
-            }
-
-            .stat-card {
-                padding: 1rem;
-                display: flex;
-                justify-content: space-between;
-                align-items: center;
-            }
-
-            .stat-card h4 { margin-bottom: 0; }
+            .app-header { flex-direction: column; align-items: flex-start; gap: 1.25rem; }
+            .app-header div:last-child { width: 100%; display: grid !important; grid-template-columns: 60px 1fr; gap: 10px; }
+            .stats-grid { grid-template-columns: 1fr; gap: 0.75rem; }
+            .stat-card { display: flex; justify-content: space-between; align-items: center; padding: 1rem; }
             .stat-card p { font-size: 1.5rem; }
-
-            .control-panel {
-                display: flex;
-                flex-direction: column-reverse; /* El panel de carga y botones de reporte bajan */
-                gap: 1.5rem;
-            }
-
-            .task-item {
-                flex-direction: column;
-                align-items: flex-start;
-                gap: 1rem;
-            }
-
-            .task-item div:last-child {
-                width: 100%;
-                display: flex;
-                justify-content: stretch;
-                border-top: 1px solid var(--border);
-                padding-top: 0.75rem;
-            }
-
-            .task-item .btn {
-                flex: 1;
-                min-height: 48px; /* Optimizado para touch */
-            }
-
-            /* Prevenir zoom automático en iOS y mejorar accesibilidad táctil */
-            input, select, textarea, .btn {
-                font-size: 16px !important;
-                min-height: 44px;
-            }
-
-            /* Ajustes estéticos para modales en pantallas pequeñas */
-            .swal2-popup {
-                width: 95% !important;
-                padding: 1rem 0.5rem !important;
-            }
-            
-            .swal2-html-container { margin: 1em 0.5rem 0.3em !important; }
-            
-            .swal2-input, .swal2-textarea, .swal2-select {
-                margin: 8px 0 !important;
-                width: 100% !important;
-                box-sizing: border-box !important;
-            }
+            .control-panel { display: flex; flex-direction: column-reverse; gap: 1.5rem; }
+            .task-item { flex-direction: column; align-items: flex-start; gap: 1rem; }
+            .task-item div:last-child { width: 100%; border-top: 1px solid var(--border); padding-top: 0.75rem; }
+            input, select, textarea, .btn { font-size: 16px !important; min-height: 44px; }
         }
 
-        /* Corrección de alineación para inputs dentro de SweetAlert */
+        /* Corrección para modales de SweetAlert */
         .swal2-html-container input, 
         .swal2-html-container select, 
         .swal2-html-container textarea {
             box-sizing: border-box !important;
             width: 100% !important;
-            margin-left: 0 !important;
-            margin-right: 0 !important;
+            margin: 8px 0 !important;
         }
     </style>
 </head>
 <body>
 
+<!-- Overlay de Autenticación -->
+<div id="auth-overlay">
+    <div class="card" style="width: 100%; max-width: 400px; text-align: center;">
+        <h2 style="margin-bottom: 10px;">PharmaTask Pro</h2>
+        <p style="color: var(--text-muted); margin-bottom: 20px; font-size: 0.875rem;">Acceso Seguro Cloud</p>
+        <input type="email" id="login-email" placeholder="Correo electrónico">
+        <input type="password" id="login-pass" placeholder="Contraseña">
+        <button class="btn btn-primary" style="margin-top: 15px;" onclick="AuthUI.handleLogin()">Entrar / Registrarse</button>
+        <p style="font-size: 0.7rem; margin-top: 15px; color: var(--text-muted);">Si el correo no existe, se creará una cuenta nueva.</p>
+    </div>
+</div>
+
 <div class="layout">
     <header class="app-header">
         <div>
+            <div class="user-bar">
+                <span id="user-display">Cargando...</span> | 
+                <a href="#" onclick="AuthUI.logout()" style="color: var(--danger); text-decoration: none;">Salir</a>
+            </div>
             <h1 style="font-size: 1.5rem; font-weight: 800;">PharmaTask <span style="color: var(--primary);">Pro</span></h1>
-            <p style="color: var(--text-muted); font-size: 0.875rem;">Gestión por Código y Farmacia</p>
+            <p style="color: var(--text-muted); font-size: 0.875rem;">Gestión Cloud de Farmacias</p>
         </div>
         <div style="display: flex; gap: 10px;">
             <button class="btn btn-outline" style="width: auto;" onclick="App.toggleTheme()">🌓</button>
@@ -165,21 +151,22 @@
 
         <aside>
             <div class="card">
-                <h3 style="font-size: 1rem; margin-bottom: 0.5rem;">Cargar Base de Datos</h3>
-                <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 1rem;">Usa el archivo CSV de farmacias.</p>
+                <h3 style="font-size: 1rem; margin-bottom: 0.5rem;">Base de Datos Cloud</h3>
+                <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 1rem;">Sincronizado con Google Firestore.</p>
                 <input type="file" id="excel-upload" accept=".xlsx, .xls, .csv" onchange="App.handleExcel(event)">
                 <button class="btn btn-outline" onclick="document.getElementById('excel-upload').click()">
-                    📁 Seleccionar Archivo
+                    📁 Importar Farmacias
                 </button>
                 <div id="client-status" style="font-size: 0.75rem; font-weight: 600; text-align: center; margin-top: 10px;"></div>
             </div>
-            <button class="btn btn-primary" onclick="App.exportPDF()">📄 Generar Reporte PDF</button>
+            <button class="btn btn-primary" onclick="App.exportPDF()">📄 Reporte de Finalizadas</button>
         </aside>
     </main>
 </div>
 
+<!-- Plantilla Oculta para PDF -->
 <div id="pdf-template">
-    <h2 style="color: #2563eb; border-bottom: 2px solid #2563eb; padding-bottom: 10px;">Reporte de Tareas - PharmaTask</h2>
+    <h2 style="color: #2563eb; border-bottom: 2px solid #2563eb; padding-bottom: 10px;">PharmaTask Pro - Reporte</h2>
     <table style="width: 100%; border-collapse: collapse; margin-top: 20px;">
         <thead>
             <tr style="background: #f1f5f9;">
@@ -193,97 +180,114 @@
 </div>
 
 <script>
+    const AuthUI = {
+        async handleLogin() {
+            const email = document.getElementById('login-email').value;
+            const pass = document.getElementById('login-pass').value;
+            if(!email || !pass) return Swal.fire('Aviso', 'Completa los datos', 'warning');
+
+            try {
+                // Intenta entrar
+                await FB.signInWithEmailAndPassword(FB.auth, email, pass);
+            } catch (e) {
+                if (e.code === 'auth/user-not-found' || e.code === 'auth/invalid-credential') {
+                    // Intenta registrar si no existe
+                    try {
+                        await FB.createUserWithEmailAndPassword(FB.auth, email, pass);
+                    } catch (regErr) {
+                        Swal.fire('Error', 'No se pudo crear la cuenta: ' + regErr.message, 'error');
+                    }
+                } else {
+                    Swal.fire('Error', e.message, 'error');
+                }
+            }
+        },
+        logout() { FB.signOut(FB.auth); location.reload(); }
+    };
+
     const App = {
-        tasks: JSON.parse(localStorage.getItem('pharma_tasks')) || [],
-        clients: JSON.parse(localStorage.getItem('pharma_db_clients')) || [],
-        
-        init() {
-            this.updateStats();
+        tasks: [],
+        clients: [],
+        currentUser: null,
+
+        async init(user) {
+            this.currentUser = user;
+            document.getElementById('auth-overlay').style.display = 'none';
+            document.getElementById('user-display').innerText = user.email;
+            
+            // Cargar de Firestore
+            await this.syncFromCloud();
             this.renderAll();
-            this.updateClientUI();
         },
 
-        save() {
-            localStorage.setItem('pharma_tasks', JSON.stringify(this.tasks));
+        async syncToCloud() {
+            if(!this.currentUser) return;
+            try {
+                const userRef = FB.doc(FB.db, "users", this.currentUser.uid);
+                await FB.setDoc(userRef, {
+                    tasks: this.tasks,
+                    clients: this.clients,
+                    lastSync: Date.now()
+                });
+                this.updateStats();
+                this.updateClientUI();
+            } catch (err) { console.error("Sync Error:", err); }
+        },
+
+        async syncFromCloud() {
+            const docRef = FB.doc(FB.db, "users", this.currentUser.uid);
+            const snap = await FB.getDoc(docRef);
+            if (snap.exists()) {
+                const data = snap.data();
+                this.tasks = data.tasks || [];
+                this.clients = data.clients || [];
+            }
             this.updateStats();
-            this.renderAll();
+            this.updateClientUI();
         },
 
         handleExcel(event) {
             const file = event.target.files[0];
             if (!file) return;
-
             const reader = new FileReader();
             reader.onload = (e) => {
                 try {
                     const data = new Uint8Array(e.target.result);
-                    const workbook = XLSX.read(data, { type: 'array' });
-                    const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
-                    const jsonData = XLSX.utils.sheet_to_json(firstSheet);
+                    const wb = XLSX.read(data, { type: 'array' });
+                    const sheet = wb.Sheets[wb.SheetNames[0]];
+                    const json = XLSX.utils.sheet_to_json(sheet);
                     
-                    const formattedClients = jsonData.map(row => ({
-                        id: (row["Codigo"] || row["CODIGO"] || row["ID"] || "").toString().trim(),
-                        name: (row["NombreFantasia"] || row["NOMBREFANTASIA"] || row["Nombre"] || "").toString().trim()
+                    this.clients = json.map(row => ({
+                        id: (row["Codigo"] || row["CODIGO"] || "").toString().trim(),
+                        name: (row["NombreFantasia"] || row["NOMBREFANTASIA"] || "").toString().trim()
                     })).filter(c => c.id !== "" && c.name !== "");
 
-                    if (formattedClients.length > 0) {
-                        this.clients = formattedClients;
-                        localStorage.setItem('pharma_db_clients', JSON.stringify(this.clients));
-                        this.updateClientUI();
-                        Swal.fire('¡Importado!', `${formattedClients.length} farmacias cargadas por Código.`, 'success');
-                    } else {
-                        Swal.fire('Error', 'No se encontró la columna "Codigo" o "NombreFantasia".', 'error');
-                    }
-                } catch (err) {
-                    Swal.fire('Error', 'No se pudo procesar el archivo.', 'error');
-                }
+                    this.syncToCloud();
+                    Swal.fire('Éxito', `Sincronizadas ${this.clients.length} farmacias`, 'success');
+                } catch (err) { Swal.fire('Error', 'Archivo no compatible', 'error'); }
             };
             reader.readAsArrayBuffer(file);
         },
 
         updateClientUI() {
-            const status = document.getElementById('client-status');
-            status.innerText = this.clients.length > 0 
-                ? `✅ ${this.clients.length} farmacias listas` 
-                : '❌ Sin base de datos';
-            status.style.color = this.clients.length > 0 ? 'var(--success)' : 'var(--danger)';
+            const st = document.getElementById('client-status');
+            st.innerText = this.clients.length > 0 ? `✅ ${this.clients.length} farmacias listas` : '❌ Sin base de datos';
+            st.style.color = this.clients.length > 0 ? 'var(--success)' : 'var(--danger)';
         },
 
-        autoComplete(value, source) {
-            if (!value || this.clients.length === 0) return;
-            
-            const found = this.clients.find(c => {
-                if (source === 'id') return c.id.toLowerCase() === value.toLowerCase();
-                return c.name.toLowerCase().includes(value.toLowerCase());
-            });
-
-            if (found) {
-                const idInput = document.getElementById('swal-client');
-                const nameInput = document.getElementById('swal-pharmacy');
-                
-                if (source === 'id') {
-                    nameInput.value = found.name;
-                } else if (source === 'name' && value.length > 3) { 
-                    idInput.value = found.id;
-                }
+        autoComplete(val, source) {
+            if (!val || this.clients.length === 0) return;
+            const match = this.clients.find(c => source === 'id' ? c.id === val : c.name.toLowerCase().includes(val.toLowerCase()));
+            if (match) {
+                document.getElementById('swal-pharmacy').value = match.name;
+                document.getElementById('swal-client').value = match.id;
             }
         },
 
-        addTask(data) {
-            this.tasks.unshift({ id: Date.now(), status: 'pendiente', ...data });
-            this.save();
-        },
-
-        deleteTask(id) {
-            this.tasks = this.tasks.filter(t => t.id !== id);
-            this.save();
-        },
-
-        updateStatus(id, newStatus) {
-            const task = this.tasks.find(t => t.id === id);
-            if(task) { task.status = newStatus; this.save(); }
-        },
-
+        addTask(data) { this.tasks.unshift({ id: Date.now(), status: 'pendiente', ...data }); this.syncToCloud(); this.renderAll(); },
+        deleteTask(id) { this.tasks = this.tasks.filter(t => t.id !== id); this.syncToCloud(); this.renderAll(); },
+        updateStatus(id, stat) { const t = this.tasks.find(x => x.id === id); if(t) { t.status = stat; this.syncToCloud(); this.renderAll(); } },
+        
         updateStats() {
             document.getElementById('stat-total').innerText = this.tasks.length;
             document.getElementById('stat-process').innerText = this.tasks.filter(t => t.status === 'proceso').length;
@@ -291,43 +295,32 @@
         },
 
         filterTasks() {
-            const query = document.getElementById('globalSearch').value.toLowerCase();
-            const filtered = this.tasks.filter(t => 
-                t.pharmacy.toLowerCase().includes(query) || t.clientId.includes(query)
-            );
-            UI.drawList(filtered);
+            const q = document.getElementById('globalSearch').value.toLowerCase();
+            UI.drawList(this.tasks.filter(t => t.pharmacy.toLowerCase().includes(q) || t.clientId.includes(q)));
         },
 
         renderAll() { UI.drawList(this.tasks); },
-
+        
         toggleTheme() {
-            const body = document.body;
-            body.setAttribute('data-theme', body.getAttribute('data-theme') === 'dark' ? 'light' : 'dark');
+            const b = document.body;
+            b.setAttribute('data-theme', b.getAttribute('data-theme') === 'dark' ? 'light' : 'dark');
         },
 
         async exportPDF() {
             const done = this.tasks.filter(t => t.status === 'completada');
-            if(done.length === 0) return Swal.fire('Aviso', 'No hay tareas finalizadas.', 'info');
-            document.getElementById('pdf-body').innerHTML = done.map(t => `
-                <tr><td style="padding:8px;border:1px solid #ddd">${t.clientId}</td>
-                <td style="padding:8px;border:1px solid #ddd">${t.pharmacy}</td>
-                <td style="padding:8px;border:1px solid #ddd">${t.desc}</td></tr>
-            `).join('');
-            const element = document.getElementById('pdf-template');
-            element.style.display = 'block';
-            await html2pdf().set({ margin: 1, filename: 'Reporte_Tareas.pdf' }).from(element).save();
-            element.style.display = 'none';
+            if(done.length === 0) return Swal.fire('Aviso', 'No hay tareas finalizadas', 'info');
+            document.getElementById('pdf-body').innerHTML = done.map(t => `<tr><td>${t.clientId}</td><td>${t.pharmacy}</td><td>${t.desc}</td></tr>`).join('');
+            const el = document.getElementById('pdf-template'); el.style.display = 'block';
+            await html2pdf().set({ margin: 1, filename: 'Tareas_PharmaTask.pdf' }).from(el).save();
+            el.style.display = 'none';
         }
     };
 
     const UI = {
         drawList(tasks) {
-            const container = document.getElementById('taskListContent');
-            if(tasks.length === 0) {
-                container.innerHTML = `<div style="text-align:center; padding: 2rem; color: var(--text-muted);">Sin tareas.</div>`;
-                return;
-            }
-            container.innerHTML = tasks.map(t => `
+            const c = document.getElementById('taskListContent');
+            c.innerHTML = tasks.length === 0 ? `<div style="text-align:center; padding: 2rem; color:var(--text-muted)">Sin tareas pendientes.</div>` :
+            tasks.map(t => `
                 <div class="task-item">
                     <div>
                         <div style="display:flex; align-items:center; gap:8px;">
@@ -346,46 +339,37 @@
         },
 
         async openModal() {
-            const { value: formValues } = await Swal.fire({
+            const { value: form } = await Swal.fire({
                 title: 'Nueva Tarea',
                 html: `
                     <div style="text-align: left;">
-                        <label style="font-size:0.75rem; font-weight:bold;">CÓDIGO DE FARMACIA</label>
-                        <input id="swal-client" class="swal2-input" placeholder="Ej: 900041" oninput="App.autoComplete(this.value, 'id')">
-                        
-                        <label style="font-size:0.75rem; font-weight:bold;">NOMBRE FANTASÍA</label>
-                        <input id="swal-pharmacy" class="swal2-input" placeholder="Nombre de la farmacia..." oninput="App.autoComplete(this.value, 'name')">
-                        
-                        <label style="font-size:0.75rem; font-weight:bold;">PRIORIDAD</label>
-                        <select id="swal-priority" class="swal2-input">
-                            <option value="Media">Media</option>
-                            <option value="Alta">Alta</option>
-                            <option value="Baja">Baja</option>
-                        </select>
-                        
-                        <label style="font-size:0.75rem; font-weight:bold;">DESCRIPCIÓN DEL PROBLEMA</label>
-                        <textarea id="swal-desc" class="swal2-textarea" placeholder="Detalles técnicos..."></textarea>
-                    </div>
-                `,
+                        <input id="swal-client" class="swal2-input" placeholder="Código" oninput="App.autoComplete(this.value, 'id')">
+                        <input id="swal-pharmacy" class="swal2-input" placeholder="Nombre Farmacia" oninput="App.autoComplete(this.value, 'name')">
+                        <select id="swal-priority" class="swal2-input"><option>Media</option><option>Alta</option><option>Baja</option></select>
+                        <textarea id="swal-desc" class="swal2-textarea" placeholder="Descripción del problema..."></textarea>
+                    </div>`,
                 showCancelButton: true,
-                confirmButtonText: 'Guardar',
                 preConfirm: () => {
-                    const pharmacy = document.getElementById('swal-pharmacy').value;
-                    const desc = document.getElementById('swal-desc').value;
-                    if(!pharmacy || !desc) return Swal.showValidationMessage('Farmacia y Descripción obligatorios');
-                    return {
-                        clientId: document.getElementById('swal-client').value || 'S/N',
-                        pharmacy,
-                        priority: document.getElementById('swal-priority').value,
-                        desc
-                    }
+                    const ph = document.getElementById('swal-pharmacy').value;
+                    const ds = document.getElementById('swal-desc').value;
+                    if(!ph || !ds) return Swal.showValidationMessage('Faltan datos obligatorios');
+                    return { clientId: document.getElementById('swal-client').value, pharmacy: ph, priority: document.getElementById('swal-priority').value, desc: ds };
                 }
             });
-            if (formValues) App.addTask(formValues);
+            if (form) App.addTask(form);
         }
     };
 
-    document.addEventListener('DOMContentLoaded', () => App.init());
+    // Espera a que Firebase esté listo
+    const checkAuth = setInterval(() => {
+        if(window.FB) {
+            clearInterval(checkAuth);
+            FB.onAuthStateChanged(FB.auth, user => {
+                if (user) App.init(user);
+                else document.getElementById('auth-overlay').style.display = 'flex';
+            });
+        }
+    }, 500);
 </script>
 </body>
 </html>
