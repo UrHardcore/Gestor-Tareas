@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PharmaTask Pro | Gestión por Código</title>
+    <title>PharmaTask Pro | Gestión de Tareas con Tiempo</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -24,11 +24,10 @@
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body { font-family: 'Inter', sans-serif; background-color: var(--background); color: var(--text-main); transition: 0.3s; }
         
-        /* ESTILOS NUEVOS: LOGIN (FONDO SÓLIDO) */
+        /* LOGIN SCREEN */
         #auth-screen {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background-color: #0f172a; /* Fondo sólido oscuro profesional */
-            display: flex; align-items: center; justify-content: center; z-index: 10000;
+            background-color: #0f172a; display: flex; align-items: center; justify-content: center; z-index: 10000;
         }
         .auth-card {
             background: white; padding: 2rem; border-radius: 16px; width: 90%; max-width: 400px;
@@ -41,7 +40,7 @@
         }
         .auth-input { width: 100%; padding: 0.75rem; margin-bottom: 0.75rem; border: 1px solid #e2e8f0; border-radius: 8px; }
 
-        /* ESTRUCTURA ORIGINAL (OCULTA HASTA LOGIN) */
+        /* MAIN LAYOUT */
         .layout { max-width: 1200px; margin: 0 auto; padding: 2rem 1rem; display: none; }
         .app-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; }
         .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.5rem; margin-bottom: 2rem; }
@@ -66,47 +65,37 @@
         @media (max-width: 768px) {
             .layout { padding: 1rem; }
             .app-header { flex-direction: column; align-items: flex-start; gap: 1.25rem; }
-            .app-header div:last-child { width: 100%; display: grid !important; grid-template-columns: 60px 1fr; gap: 10px; }
+            .app-header div:last-child { width: 100%; display: grid !important; grid-template-columns: 60px 1fr 1fr; gap: 10px; }
             .stats-grid { grid-template-columns: 1fr; gap: 0.75rem; }
-            .stat-card { padding: 1rem; display: flex; justify-content: space-between; align-items: center; }
-            .stat-card h4 { margin-bottom: 0; }
-            .stat-card p { font-size: 1.5rem; }
             .control-panel { display: flex; flex-direction: column-reverse; gap: 1.5rem; }
             .task-item { flex-direction: column; align-items: flex-start; gap: 1rem; }
             .task-item div:last-child { width: 100%; display: flex; justify-content: stretch; border-top: 1px solid var(--border); padding-top: 0.75rem; }
-            .task-item .btn { flex: 1; min-height: 48px; }
             input, select, textarea, .btn { font-size: 16px !important; min-height: 44px; }
-            .swal2-popup { width: 95% !important; padding: 1rem 0.5rem !important; }
         }
-        .swal2-html-container input, .swal2-html-container select, .swal2-html-container textarea { box-sizing: border-box !important; width: 100% !important; margin-left: 0 !important; margin-right: 0 !important; }
+        .swal2-html-container input, .swal2-html-container select, .swal2-html-container textarea { box-sizing: border-box !important; width: 100% !important; margin: 5px 0 !important; }
     </style>
 </head>
 <body>
 
-<!-- PANTALLA DE ACCESO -->
 <div id="auth-screen">
     <div class="auth-card">
         <h2 style="margin-bottom: 1rem; font-weight: 800;">PharmaTask <span style="color: var(--primary);">Pro</span></h2>
-        
         <button class="google-btn" onclick="Auth.loginGoogle()">
             <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" width="18" alt="Google">
             Entrar con Google
         </button>
-
-        <div style="margin: 1rem 0; color: #64748b; font-size: 0.8rem;">o correo corporativo</div>
-        
-        <input type="email" id="email" class="auth-input" placeholder="Correo electrónico">
-        <input type="password" id="pass" class="auth-input" placeholder="Contraseña (mín. 6 caracteres)">
-        <button class="btn btn-primary" onclick="Auth.loginEmail()">Acceder / Registrarse</button>
+        <div style="margin: 1rem 0; color: #64748b; font-size: 0.8rem;">o acceso por correo</div>
+        <input type="email" id="email" class="auth-input" placeholder="Correo">
+        <input type="password" id="pass" class="auth-input" placeholder="Contraseña">
+        <button class="btn btn-primary" onclick="Auth.loginEmail()">Entrar</button>
     </div>
 </div>
 
-<!-- TU CUERPO ORIGINAL -->
 <div class="layout" id="main-layout">
     <header class="app-header">
         <div>
             <h1 style="font-size: 1.5rem; font-weight: 800;">PharmaTask <span style="color: var(--primary);">Pro</span></h1>
-            <p style="color: var(--text-muted); font-size: 0.875rem;">Gestión por Código y Farmacia</p>
+            <p style="color: var(--text-muted); font-size: 0.875rem;">Gestión de Tareas y Tiempos</p>
         </div>
         <div style="display: flex; gap: 10px;">
             <button class="btn btn-outline" style="width: auto;" onclick="App.toggleTheme()">🌓</button>
@@ -123,45 +112,41 @@
 
     <main class="control-panel">
         <section>
-            <div style="display: flex; gap: 1rem; margin-bottom: 1rem;">
-                <input type="text" id="globalSearch" placeholder="Buscar por farmacia o código..." onkeyup="App.filterTasks()">
-            </div>
+            <input type="text" id="globalSearch" placeholder="Buscar farmacia..." onkeyup="App.filterTasks()" style="margin-bottom: 1.5rem;">
             <div id="taskListContent"></div>
         </section>
 
         <aside>
             <div class="card">
-                <h3 style="font-size: 1rem; margin-bottom: 0.5rem;">Cargar Base de Datos</h3>
-                <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 1rem;">Usa el archivo CSV de farmacias.</p>
+                <h3 style="font-size: 1rem;">Base de Datos</h3>
                 <input type="file" id="excel-upload" accept=".xlsx, .xls, .csv" onchange="App.handleExcel(event)">
-                <button class="btn btn-outline" onclick="document.getElementById('excel-upload').click()">
-                    📁 Seleccionar Archivo
-                </button>
-                <div id="client-status" style="font-size: 0.75rem; font-weight: 600; text-align: center; margin-top: 10px;"></div>
+                <button class="btn btn-outline" onclick="document.getElementById('excel-upload').click()" style="margin-top:10px;">📁 Cargar Farmacias</button>
+                <div id="client-status" style="font-size: 0.75rem; text-align: center; margin-top: 10px;"></div>
             </div>
-            <button class="btn btn-primary" onclick="App.exportPDF()">📄 Generar Reporte PDF</button>
+            <button class="btn btn-primary" onclick="App.exportPDF()">📄 Reporte de Tiempos</button>
         </aside>
     </main>
 </div>
 
 <div id="pdf-template">
-    <h2 style="color: #2563eb; border-bottom: 2px solid #2563eb; padding-bottom: 10px;">Reporte de Tareas - PharmaTask</h2>
+    <h2 style="color: #2563eb; border-bottom: 2px solid #2563eb; padding-bottom: 10px;">Reporte de Productividad - PharmaTask</h2>
     <table style="width: 100%; border-collapse: collapse; margin-top: 20px;">
         <thead>
             <tr style="background: #f1f5f9;">
-                <th style="padding: 10px; border: 1px solid #ddd;">Código</th>
+                <th style="padding: 10px; border: 1px solid #ddd;">Cod</th>
                 <th style="padding: 10px; border: 1px solid #ddd;">Farmacia</th>
                 <th style="padding: 10px; border: 1px solid #ddd;">Descripción</th>
+                <th style="padding: 10px; border: 1px solid #ddd;">Inicio</th>
+                <th style="padding: 10px; border: 1px solid #ddd;">Finalización</th>
             </tr>
         </thead>
         <tbody id="pdf-body"></tbody>
     </table>
 </div>
 
-<!-- FIREBASE INTEGRATION -->
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-    import { getAuth, signInWithPopup, GoogleAuthProvider, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+    import { getAuth, signInWithPopup, GoogleAuthProvider, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
     const firebaseConfig = {
         apiKey: "AIzaSyCCPwgkILNrFt08pSJMxxH1W9Bc18JWBFE",
@@ -169,29 +154,15 @@
         projectId: "pharma-task",
         storageBucket: "pharma-task.firebasestorage.app",
         messagingSenderId: "157821568633",
-        appId: "1:157821568633:web:be0aa1626322119a1af6a8",
-        measurementId: "G-1B6T04F8MH"
+        appId: "1:157821568633:web:be0aa1626322119a1af6a8"
     };
 
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
 
     window.Auth = {
-        loginGoogle: () => {
-            const provider = new GoogleAuthProvider();
-            signInWithPopup(auth, provider).catch(err => alert("Error: " + err.message));
-        },
-        loginEmail: async () => {
-            const email = document.getElementById('email').value;
-            const pass = document.getElementById('pass').value;
-            if(!email || pass.length < 6) return alert("Ingresa datos válidos (clave min. 6)");
-            try {
-                await signInWithEmailAndPassword(auth, email, pass);
-            } catch (err) {
-                if(err.code === 'auth/user-not-found') await createUserWithEmailAndPassword(auth, email, pass);
-                else alert(err.message);
-            }
-        },
+        loginGoogle: () => signInWithPopup(auth, new GoogleAuthProvider()),
+        loginEmail: () => signInWithEmailAndPassword(auth, document.getElementById('email').value, document.getElementById('pass').value),
         logout: () => signOut(auth)
     };
 
@@ -202,77 +173,101 @@
     });
 </script>
 
-<!-- TU LÓGICA ORIGINAL INTACTA -->
 <script>
     const App = {
         tasks: JSON.parse(localStorage.getItem('pharma_tasks')) || [],
         clients: JSON.parse(localStorage.getItem('pharma_db_clients')) || [],
+        
         init() { this.updateStats(); this.renderAll(); this.updateClientUI(); },
         save() { localStorage.setItem('pharma_tasks', JSON.stringify(this.tasks)); this.updateStats(); this.renderAll(); },
+
         handleExcel(event) {
             const file = event.target.files[0];
-            if (!file) return;
             const reader = new FileReader();
             reader.onload = (e) => {
-                try {
-                    const data = new Uint8Array(e.target.result);
-                    const workbook = XLSX.read(data, { type: 'array' });
-                    const jsonData = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]]);
-                    const formatted = jsonData.map(row => ({
-                        id: (row["Codigo"] || row["CODIGO"] || row["ID"] || "").toString().trim(),
-                        name: (row["NombreFantasia"] || row["NOMBREFANTASIA"] || row["Nombre"] || "").toString().trim()
-                    })).filter(c => c.id !== "" && c.name !== "");
-                    if (formatted.length > 0) {
-                        this.clients = formatted;
-                        localStorage.setItem('pharma_db_clients', JSON.stringify(this.clients));
-                        this.updateClientUI();
-                        Swal.fire('¡Importado!', `${formatted.length} farmacias listas.`, 'success');
-                    }
-                } catch (err) { Swal.fire('Error', 'Archivo no válido.', 'error'); }
+                const data = new Uint8Array(e.target.result);
+                const wb = XLSX.read(data, { type: 'array' });
+                const json = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]]);
+                this.clients = json.map(r => ({
+                    id: (r["Codigo"] || r["ID"] || "").toString(),
+                    name: (r["NombreFantasia"] || r["Nombre"] || "").toString()
+                })).filter(c => c.id && c.name);
+                localStorage.setItem('pharma_db_clients', JSON.stringify(this.clients));
+                this.updateClientUI();
+                Swal.fire('Éxito', 'Farmacias cargadas', 'success');
             };
             reader.readAsArrayBuffer(file);
         },
+
         updateClientUI() {
             const s = document.getElementById('client-status');
             s.innerText = this.clients.length > 0 ? `✅ ${this.clients.length} farmacias` : '❌ Sin base';
             s.style.color = this.clients.length > 0 ? 'var(--success)' : 'var(--danger)';
         },
-        autoComplete(value, source) {
-            if (!value || this.clients.length === 0) return;
-            const found = this.clients.find(c => source === 'id' ? c.id === value : c.name.toLowerCase().includes(value.toLowerCase()));
-            if (found) {
+
+        autoComplete(val, src) {
+            const found = this.clients.find(c => src === 'id' ? c.id === val : c.name.toLowerCase().includes(val.toLowerCase()));
+            if(found) {
                 document.getElementById('swal-client').value = found.id;
                 document.getElementById('swal-pharmacy').value = found.name;
             }
         },
-        addTask(data) { this.tasks.unshift({ id: Date.now(), status: 'pendiente', ...data }); this.save(); },
+
+        addTask(data) {
+            this.tasks.unshift({ 
+                id: Date.now(), 
+                status: 'pendiente', 
+                createdAt: new Date().toLocaleString('es-AR'), // Inicio automático[cite: 2]
+                completedAt: null,
+                ...data 
+            });
+            this.save();
+        },
+
+        updateStatus(id, stat) {
+            const t = this.tasks.find(x => x.id === id);
+            if(t) {
+                t.status = stat;
+                if(stat === 'completada') t.completedAt = new Date().toLocaleString('es-AR'); // Fin automático[cite: 2]
+                this.save();
+            }
+        },
+
         deleteTask(id) { this.tasks = this.tasks.filter(t => t.id !== id); this.save(); },
-        updateStatus(id, s) { const t = this.tasks.find(x => x.id === id); if(t){t.status = s; this.save();} },
         updateStats() {
             document.getElementById('stat-total').innerText = this.tasks.length;
             document.getElementById('stat-process').innerText = this.tasks.filter(t => t.status === 'proceso').length;
             document.getElementById('stat-done').innerText = this.tasks.filter(t => t.status === 'completada').length;
         },
+
         filterTasks() {
             const q = document.getElementById('globalSearch').value.toLowerCase();
             UI.drawList(this.tasks.filter(t => t.pharmacy.toLowerCase().includes(q) || t.clientId.includes(q)));
         },
+
         renderAll() { UI.drawList(this.tasks); },
-        toggleTheme() {
-            const b = document.body;
-            b.setAttribute('data-theme', b.getAttribute('data-theme') === 'dark' ? 'light' : 'dark');
-        },
+        toggleTheme() { document.body.setAttribute('data-theme', document.body.getAttribute('data-theme') === 'dark' ? 'light' : 'dark'); },
+
         async exportPDF() {
             const done = this.tasks.filter(t => t.status === 'completada');
-            if(done.length === 0) return Swal.fire('Aviso', 'No hay tareas finalizadas.', 'info');
+            if(done.length === 0) return Swal.fire('Aviso', 'No hay tareas completadas.', 'info');
+            
             document.getElementById('pdf-body').innerHTML = done.map(t => `
-                <tr><td style="padding:10px;border:1px solid #ddd">${t.clientId}</td>
-                <td style="padding:10px;border:1px solid #ddd">${t.pharmacy}</td>
-                <td style="padding:10px;border:1px solid #ddd">${t.desc}</td></tr>
-            `).join('');
+                <tr>
+                    <td style="padding:8px;border:1px solid #ddd">${t.clientId}</td>
+                    <td style="padding:8px;border:1px solid #ddd">${t.pharmacy}</td>
+                    <td style="padding:8px;border:1px solid #ddd">${t.desc}</td>
+                    <td style="padding:8px;border:1px solid #ddd; font-size:0.75rem">${t.createdAt}</td>
+                    <td style="padding:8px;border:1px solid #ddd; font-size:0.75rem">${t.completedAt}</td>
+                </tr>`).join('');
+
             const el = document.getElementById('pdf-template');
             el.style.display = 'block';
-            await html2pdf().set({ margin: 1, filename: 'Reporte.pdf' }).from(el).save();
+            await html2pdf().set({ 
+                margin: 10, 
+                filename: 'Reporte_Productividad.pdf',
+                jsPDF: { orientation: 'landscape' } // Horizontal para las fechas[cite: 2]
+            }).from(el).save();
             el.style.display = 'none';
         }
     };
@@ -280,45 +275,44 @@
     const UI = {
         drawList(tasks) {
             const container = document.getElementById('taskListContent');
-            container.innerHTML = tasks.length === 0 ? `<div style="text-align:center; padding: 2rem; color: var(--text-muted);">Sin tareas.</div>` :
+            container.innerHTML = tasks.length === 0 ? `<div style="text-align:center;color:var(--text-muted);">Sin tareas pendientes</div>` :
             tasks.map(t => `
                 <div class="task-item">
                     <div>
-                        <div style="display:flex; align-items:center; gap:8px;">
-                            <span class="priority-pill p-${t.priority}">${t.priority}</span>
-                            <strong>${t.pharmacy}</strong>
-                        </div>
-                        <p style="font-size: 0.8rem; color: var(--text-muted);">Código: ${t.clientId} | Estado: ${t.status}</p>
-                        <p style="margin-top:5px;">${t.desc}</p>
+                        <span class="priority-pill p-${t.priority}">${t.priority}</span>
+                        <strong>${t.pharmacy}</strong>
+                        <p style="font-size:0.8rem;color:var(--text-muted)">Cod: ${t.clientId} | Creada: ${t.createdAt}</p>
+                        <p style="margin-top:5px">${t.desc}</p>
                     </div>
-                    <div style="display:flex; gap: 5px;">
+                    <div style="display:flex;gap:5px;">
                         ${t.status !== 'completada' ? `<button class="btn btn-outline" style="width:40px" onclick="App.updateStatus(${t.id}, 'completada')">✅</button>` : ''}
-                        <button class="btn btn-outline" style="width:40px; color:var(--danger)" onclick="App.deleteTask(${t.id})">🗑️</button>
+                        <button class="btn btn-outline" style="width:40px;color:var(--danger)" onclick="App.deleteTask(${t.id})">🗑️</button>
                     </div>
-                </div>
-            `).join('');
+                </div>`).join('');
         },
+
         async openModal() {
             const { value: f } = await Swal.fire({
                 title: 'Nueva Tarea',
                 html: `
-                    <div style="text-align: left;">
-                        <label style="font-size:0.75rem; font-weight:bold;">CÓDIGO</label>
-                        <input id="swal-client" class="swal2-input" oninput="App.autoComplete(this.value, 'id')">
-                        <label style="font-size:0.75rem; font-weight:bold;">FARMACIA</label>
-                        <input id="swal-pharmacy" class="swal2-input" oninput="App.autoComplete(this.value, 'name')">
-                        <select id="swal-priority" class="swal2-input"><option value="Media">Media</option><option value="Alta">Alta</option><option value="Baja">Baja</option></select>
-                        <textarea id="swal-desc" class="swal2-textarea" placeholder="Descripción..."></textarea>
-                    </div>
-                `,
-                preConfirm: () => {
-                    const p = document.getElementById('swal-pharmacy').value;
-                    const d = document.getElementById('swal-desc').value;
-                    if(!p || !d) return Swal.showValidationMessage('Faltan datos');
-                    return { clientId: document.getElementById('swal-client').value || 'S/N', pharmacy: p, priority: document.getElementById('swal-priority').value, desc: d }
-                }
+                    <div style="text-align:left">
+                        <label style="font-size:0.75rem;font-weight:700">CÓDIGO Y FARMACIA</label>
+                        <div style="display:flex;gap:5px">
+                            <input id="swal-client" class="swal2-input" style="width:30%" placeholder="ID" oninput="App.autoComplete(this.value, 'id')">
+                            <input id="swal-pharmacy" class="swal2-input" style="width:70%" placeholder="Nombre" oninput="App.autoComplete(this.value, 'name')">
+                        </div>
+                        <label style="font-size:0.75rem;font-weight:700;margin-top:10px;display:block">DETALLES</label>
+                        <select id="swal-priority" class="swal2-input"><option>Media</option><option>Alta</option><option>Baja</option></select>
+                        <textarea id="swal-desc" class="swal2-textarea" placeholder="Descripción del problema..."></textarea>
+                    </div>`,
+                preConfirm: () => ({
+                    clientId: document.getElementById('swal-client').value || 'S/N',
+                    pharmacy: document.getElementById('swal-pharmacy').value || 'S/N',
+                    priority: document.getElementById('swal-priority').value,
+                    desc: document.getElementById('swal-desc').value
+                })
             });
-            if (f) App.addTask(f);
+            if(f && f.desc) App.addTask(f);
         }
     };
 </script>
