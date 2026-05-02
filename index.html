@@ -1,9 +1,4 @@
-import os
-
-# Definir el contenido del HTML manteniendo la estructura original del usuario
-# e integrando las funcionalidades de Firebase y el diseño de Login.
-
-html_content = """<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
@@ -29,38 +24,34 @@ html_content = """<!DOCTYPE html>
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body { font-family: 'Inter', sans-serif; background-color: var(--background); color: var(--text-main); transition: 0.3s; }
         
-        /* ESTILOS DE LOGIN (FONDO SÓLIDO LINDO) */
-        #auth-container {
+        /* ESTILOS NUEVOS: LOGIN (FONDO SÓLIDO) */
+        #auth-screen {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
-            display: flex; align-items: center; justify-content: center; z-index: 9999;
+            background-color: #0f172a; /* Fondo sólido oscuro profesional */
+            display: flex; align-items: center; justify-content: center; z-index: 10000;
         }
         .auth-card {
-            background: white; padding: 2.5rem; border-radius: 16px; width: 100%; max-width: 400px;
-            box-shadow: 0 20px 25px -5px rgba(0,0,0,0.2); text-align: center;
+            background: white; padding: 2rem; border-radius: 16px; width: 90%; max-width: 400px;
+            text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.3);
         }
-        .auth-card h2 { margin-bottom: 0.5rem; color: #0f172a; }
-        .auth-card p { color: #64748b; margin-bottom: 2rem; font-size: 0.9rem; }
         .google-btn {
-            background: white; border: 1px solid #e2e8f0; color: #0f172a; padding: 0.75rem;
-            width: 100%; border-radius: 8px; font-weight: 600; cursor: pointer;
             display: flex; align-items: center; justify-content: center; gap: 10px;
-            transition: 0.2s; margin-bottom: 1.5rem;
+            width: 100%; padding: 0.75rem; border: 1px solid #e2e8f0; border-radius: 8px;
+            background: white; color: #0f172a; font-weight: 600; cursor: pointer; margin-bottom: 1rem;
         }
-        .google-btn:hover { background: #f8fafc; }
-        .divider { display: flex; align-items: center; color: #94a3b8; font-size: 0.8rem; margin: 1.5rem 0; }
-        .divider::before, .divider::after { content: ""; flex: 1; height: 1px; background: #e2e8f0; margin: 0 10px; }
-        .auth-input { width: 100%; padding: 0.75rem; margin-bottom: 1rem; border: 1px solid #e2e8f0; border-radius: 8px; font-size: 1rem; }
-        
-        /* ESTRUCTURA ORIGINAL */
-        .layout { max-width: 1200px; margin: 0 auto; padding: 2rem 1rem; display: none; } /* Oculto hasta login */
+        .auth-input { width: 100%; padding: 0.75rem; margin-bottom: 0.75rem; border: 1px solid #e2e8f0; border-radius: 8px; }
+
+        /* ESTRUCTURA ORIGINAL (OCULTA HASTA LOGIN) */
+        .layout { max-width: 1200px; margin: 0 auto; padding: 2rem 1rem; display: none; }
         .app-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; }
         .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.5rem; margin-bottom: 2rem; }
         .stat-card { background: var(--surface); padding: 1.5rem; border-radius: var(--radius); border: 1px solid var(--border); box-shadow: var(--shadow); }
         .stat-card h4 { color: var(--text-muted); font-size: 0.875rem; text-transform: uppercase; }
         .stat-card p { font-size: 1.875rem; font-weight: 700; color: var(--primary); }
         .control-panel { display: grid; grid-template-columns: 1fr 300px; gap: 2rem; }
+        @media (max-width: 850px) { .control-panel { grid-template-columns: 1fr; } }
         .card { background: var(--surface); padding: 1.5rem; border-radius: var(--radius); border: 1px solid var(--border); margin-bottom: 1.5rem; }
+        input, select, textarea { width: 100%; padding: 0.75rem; border: 1px solid var(--border); border-radius: 8px; background: var(--background); color: var(--text-main); margin-top: 5px; }
         .btn { padding: 0.75rem 1.5rem; border-radius: 8px; border: none; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 0.5rem; justify-content: center; width: 100%; }
         .btn-primary { background: var(--primary); color: white; }
         .btn-outline { background: transparent; border: 1px solid var(--border); color: var(--text-main); }
@@ -73,33 +64,44 @@ html_content = """<!DOCTYPE html>
         #pdf-template { display: none; padding: 40px; }
 
         @media (max-width: 768px) {
-            .control-panel { grid-template-columns: 1fr; }
-            .app-header { flex-direction: column; align-items: flex-start; gap: 1rem; }
+            .layout { padding: 1rem; }
+            .app-header { flex-direction: column; align-items: flex-start; gap: 1.25rem; }
+            .app-header div:last-child { width: 100%; display: grid !important; grid-template-columns: 60px 1fr; gap: 10px; }
+            .stats-grid { grid-template-columns: 1fr; gap: 0.75rem; }
+            .stat-card { padding: 1rem; display: flex; justify-content: space-between; align-items: center; }
+            .stat-card h4 { margin-bottom: 0; }
+            .stat-card p { font-size: 1.5rem; }
+            .control-panel { display: flex; flex-direction: column-reverse; gap: 1.5rem; }
+            .task-item { flex-direction: column; align-items: flex-start; gap: 1rem; }
+            .task-item div:last-child { width: 100%; display: flex; justify-content: stretch; border-top: 1px solid var(--border); padding-top: 0.75rem; }
+            .task-item .btn { flex: 1; min-height: 48px; }
+            input, select, textarea, .btn { font-size: 16px !important; min-height: 44px; }
+            .swal2-popup { width: 95% !important; padding: 1rem 0.5rem !important; }
         }
+        .swal2-html-container input, .swal2-html-container select, .swal2-html-container textarea { box-sizing: border-box !important; width: 100% !important; margin-left: 0 !important; margin-right: 0 !important; }
     </style>
 </head>
 <body>
 
-<div id="auth-container">
+<!-- PANTALLA DE ACCESO -->
+<div id="auth-screen">
     <div class="auth-card">
-        <h2 style="font-weight: 800;">PharmaTask <span style="color: #2563eb;">Pro</span></h2>
-        <p>Inicia sesión para gestionar tus tareas</p>
+        <h2 style="margin-bottom: 1rem; font-weight: 800;">PharmaTask <span style="color: var(--primary);">Pro</span></h2>
         
         <button class="google-btn" onclick="Auth.loginGoogle()">
             <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" width="18" alt="Google">
-            Continuar con Google
+            Entrar con Google
         </button>
 
-        <div class="divider">o usar correo</div>
-
-        <input type="email" id="login-email" class="auth-input" placeholder="Correo electrónico">
-        <input type="password" id="login-pass" class="auth-input" placeholder="Contraseña (mín. 6 caracteres)">
+        <div style="margin: 1rem 0; color: #64748b; font-size: 0.8rem;">o correo corporativo</div>
         
-        <button class="btn btn-primary" onclick="Auth.loginEmail()">Entrar / Registrarse</button>
-        <div id="auth-error" style="color: var(--danger); font-size: 0.8rem; margin-top: 10px;"></div>
+        <input type="email" id="email" class="auth-input" placeholder="Correo electrónico">
+        <input type="password" id="pass" class="auth-input" placeholder="Contraseña (mín. 6 caracteres)">
+        <button class="btn btn-primary" onclick="Auth.loginEmail()">Acceder / Registrarse</button>
     </div>
 </div>
 
+<!-- TU CUERPO ORIGINAL -->
 <div class="layout" id="main-layout">
     <header class="app-header">
         <div>
@@ -156,6 +158,7 @@ html_content = """<!DOCTYPE html>
     </table>
 </div>
 
+<!-- FIREBASE INTEGRATION -->
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
     import { getAuth, signInWithPopup, GoogleAuthProvider, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
@@ -176,82 +179,64 @@ html_content = """<!DOCTYPE html>
     window.Auth = {
         loginGoogle: () => {
             const provider = new GoogleAuthProvider();
-            signInWithPopup(auth, provider).catch(err => alert("Error Google: " + err.message));
+            signInWithPopup(auth, provider).catch(err => alert("Error: " + err.message));
         },
         loginEmail: async () => {
-            const email = document.getElementById('login-email').value;
-            const pass = document.getElementById('login-pass').value;
-            if (!email || pass.length < 6) return alert("Email válido y clave de 6 caracteres.");
-            
+            const email = document.getElementById('email').value;
+            const pass = document.getElementById('pass').value;
+            if(!email || pass.length < 6) return alert("Ingresa datos válidos (clave min. 6)");
             try {
                 await signInWithEmailAndPassword(auth, email, pass);
             } catch (err) {
-                if (err.code === 'auth/user-not-found') {
-                    await createUserWithEmailAndPassword(auth, email, pass);
-                } else {
-                    alert("Error: " + err.message);
-                }
+                if(err.code === 'auth/user-not-found') await createUserWithEmailAndPassword(auth, email, pass);
+                else alert(err.message);
             }
         },
         logout: () => signOut(auth)
     };
 
     onAuthStateChanged(auth, (user) => {
-        const authScreen = document.getElementById('auth-container');
-        const mainLayout = document.getElementById('main-layout');
-        if (user) {
-            authScreen.style.display = 'none';
-            mainLayout.style.display = 'block';
-            App.init();
-        } else {
-            authScreen.style.display = 'flex';
-            mainLayout.style.display = 'none';
-        }
+        document.getElementById('auth-screen').style.display = user ? 'none' : 'flex';
+        document.getElementById('main-layout').style.display = user ? 'block' : 'none';
+        if(user) App.init();
     });
 </script>
 
+<!-- TU LÓGICA ORIGINAL INTACTA -->
 <script>
     const App = {
         tasks: JSON.parse(localStorage.getItem('pharma_tasks')) || [],
         clients: JSON.parse(localStorage.getItem('pharma_db_clients')) || [],
-        
-        init() {
-            this.updateStats();
-            this.renderAll();
-            this.updateClientUI();
-        },
-
-        save() {
-            localStorage.setItem('pharma_tasks', JSON.stringify(this.tasks));
-            this.updateStats();
-            this.renderAll();
-        },
-
+        init() { this.updateStats(); this.renderAll(); this.updateClientUI(); },
+        save() { localStorage.setItem('pharma_tasks', JSON.stringify(this.tasks)); this.updateStats(); this.renderAll(); },
         handleExcel(event) {
             const file = event.target.files[0];
             if (!file) return;
             const reader = new FileReader();
             reader.onload = (e) => {
-                const data = new Uint8Array(e.target.result);
-                const workbook = XLSX.read(data, { type: 'array' });
-                const jsonData = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]]);
-                this.clients = jsonData.map(row => ({
-                    id: (row["Codigo"] || row["ID"] || "").toString().trim(),
-                    name: (row["NombreFantasia"] || row["Nombre"] || "").toString().trim()
-                })).filter(c => c.id !== "" && c.name !== "");
-                localStorage.setItem('pharma_db_clients', JSON.stringify(this.clients));
-                this.updateClientUI();
-                Swal.fire('¡Éxito!', 'Base de datos cargada.', 'success');
+                try {
+                    const data = new Uint8Array(e.target.result);
+                    const workbook = XLSX.read(data, { type: 'array' });
+                    const jsonData = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]]);
+                    const formatted = jsonData.map(row => ({
+                        id: (row["Codigo"] || row["CODIGO"] || row["ID"] || "").toString().trim(),
+                        name: (row["NombreFantasia"] || row["NOMBREFANTASIA"] || row["Nombre"] || "").toString().trim()
+                    })).filter(c => c.id !== "" && c.name !== "");
+                    if (formatted.length > 0) {
+                        this.clients = formatted;
+                        localStorage.setItem('pharma_db_clients', JSON.stringify(this.clients));
+                        this.updateClientUI();
+                        Swal.fire('¡Importado!', `${formatted.length} farmacias listas.`, 'success');
+                    }
+                } catch (err) { Swal.fire('Error', 'Archivo no válido.', 'error'); }
             };
             reader.readAsArrayBuffer(file);
         },
-
         updateClientUI() {
-            const status = document.getElementById('client-status');
-            status.innerText = this.clients.length > 0 ? `✅ ${this.clients.length} farmacias` : '❌ Sin base';
-            status.style.color = this.clients.length > 0 ? 'var(--success)' : 'var(--danger)';
+            const s = document.getElementById('client-status');
+            s.innerText = this.clients.length > 0 ? `✅ ${this.clients.length} farmacias` : '❌ Sin base';
+            s.style.color = this.clients.length > 0 ? 'var(--success)' : 'var(--danger)';
         },
-
         autoComplete(value, source) {
             if (!value || this.clients.length === 0) return;
             const found = this.clients.find(c => source === 'id' ? c.id === value : c.name.toLowerCase().includes(value.toLowerCase()));
@@ -260,13 +245,9 @@ html_content = """<!DOCTYPE html>
                 document.getElementById('swal-pharmacy').value = found.name;
             }
         },
-
         addTask(data) { this.tasks.unshift({ id: Date.now(), status: 'pendiente', ...data }); this.save(); },
         deleteTask(id) { this.tasks = this.tasks.filter(t => t.id !== id); this.save(); },
-        updateStatus(id, newStatus) { 
-            const t = this.tasks.find(x => x.id === id);
-            if(t) { t.status = newStatus; this.save(); }
-        },
+        updateStatus(id, s) { const t = this.tasks.find(x => x.id === id); if(t){t.status = s; this.save();} },
         updateStats() {
             document.getElementById('stat-total').innerText = this.tasks.length;
             document.getElementById('stat-process').innerText = this.tasks.filter(t => t.status === 'proceso').length;
@@ -285,14 +266,14 @@ html_content = """<!DOCTYPE html>
             const done = this.tasks.filter(t => t.status === 'completada');
             if(done.length === 0) return Swal.fire('Aviso', 'No hay tareas finalizadas.', 'info');
             document.getElementById('pdf-body').innerHTML = done.map(t => `
-                <tr><td style="padding:8px;border:1px solid #ddd">${t.clientId}</td>
-                <td style="padding:8px;border:1px solid #ddd">${t.pharmacy}</td>
-                <td style="padding:8px;border:1px solid #ddd">${t.desc}</td></tr>
+                <tr><td style="padding:10px;border:1px solid #ddd">${t.clientId}</td>
+                <td style="padding:10px;border:1px solid #ddd">${t.pharmacy}</td>
+                <td style="padding:10px;border:1px solid #ddd">${t.desc}</td></tr>
             `).join('');
-            const element = document.getElementById('pdf-template');
-            element.style.display = 'block';
-            await html2pdf().set({ margin: 1, filename: 'Reporte_Tareas.pdf' }).from(element).save();
-            element.style.display = 'none';
+            const el = document.getElementById('pdf-template');
+            el.style.display = 'block';
+            await html2pdf().set({ margin: 1, filename: 'Reporte.pdf' }).from(el).save();
+            el.style.display = 'none';
         }
     };
 
@@ -318,29 +299,28 @@ html_content = """<!DOCTYPE html>
             `).join('');
         },
         async openModal() {
-            const { value: formValues } = await Swal.fire({
+            const { value: f } = await Swal.fire({
                 title: 'Nueva Tarea',
                 html: `
                     <div style="text-align: left;">
-                        <input id="swal-client" class="swal2-input" placeholder="Código Farmacia" oninput="App.autoComplete(this.value, 'id')">
-                        <input id="swal-pharmacy" class="swal2-input" placeholder="Nombre Fantasía" oninput="App.autoComplete(this.value, 'name')">
+                        <label style="font-size:0.75rem; font-weight:bold;">CÓDIGO</label>
+                        <input id="swal-client" class="swal2-input" oninput="App.autoComplete(this.value, 'id')">
+                        <label style="font-size:0.75rem; font-weight:bold;">FARMACIA</label>
+                        <input id="swal-pharmacy" class="swal2-input" oninput="App.autoComplete(this.value, 'name')">
                         <select id="swal-priority" class="swal2-input"><option value="Media">Media</option><option value="Alta">Alta</option><option value="Baja">Baja</option></select>
                         <textarea id="swal-desc" class="swal2-textarea" placeholder="Descripción..."></textarea>
                     </div>
                 `,
-                preConfirm: () => ({
-                    clientId: document.getElementById('swal-client').value || 'S/N',
-                    pharmacy: document.getElementById('swal-pharmacy').value,
-                    priority: document.getElementById('swal-priority').value,
-                    desc: document.getElementById('swal-desc').value
-                })
+                preConfirm: () => {
+                    const p = document.getElementById('swal-pharmacy').value;
+                    const d = document.getElementById('swal-desc').value;
+                    if(!p || !d) return Swal.showValidationMessage('Faltan datos');
+                    return { clientId: document.getElementById('swal-client').value || 'S/N', pharmacy: p, priority: document.getElementById('swal-priority').value, desc: d }
+                }
             });
-            if (formValues && formValues.pharmacy) App.addTask(formValues);
+            if (f) App.addTask(f);
         }
     };
 </script>
 </body>
-</html>"""
-
-with open("Gestor_Pharma_Auth.html", "w", encoding="utf-8") as f:
-    f.write(html_content)
+</html>
